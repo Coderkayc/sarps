@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block nav_links %}
+  <a href="#how-it-works">How it works</a>
+  <a href="#inputs">What you enter</a>
+  <a href="#roles">Who uses it</a>
+  <a href="#privacy">Privacy</a>
+  {% if current_user.is_authenticated %}<a href="{{ url_for('main.dashboard') }}">My dashboard</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+{% set model_ready = model_status().available %}
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">Student Academic Risk Prediction System</p>
+      <h1>Know where you stand, early enough to act.</h1>
+      <p class="lead">
+        SARPS helps you check your academic risk at any point in the semester.
+        Enter a few details about your studies, get an assessment, and come back
+        with a new one whenever your situation changes.
+      </p>
+      <div class="hero-actions">
+        {% if current_user.is_authenticated %}
+          <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create student account</a>
+          <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Sign in</a>
+        {% endif %}
+      </div>
+      <p class="status-note">
+        <span class="status-dot {{ 'status-dot-ok' if model_ready else '' }}" aria-hidden="true"></span>
+        {% if model_ready %}
+          The prediction model is installed and assessments are open.
+        {% else %}
+          The prediction model has not been installed yet, so assessments cannot be submitted.
+        {% endif %}
+      </p>
+    </div>
+
+    <aside class="hero-panel" aria-label="How results are shown">
+      <p class="panel-label">How results are classified</p>
+      <div class="meter-placeholder" role="img" aria-label="Illustration area for the probability meter">
+        <span>Probability meter</span>
+        <small>Shown after you submit an assessment</small>
+      </div>
+      <ul class="panel-list">
+        <li><span class="chip chip-risk">At Risk</span> probability of Not at Risk is 50% or below</li>
+        <li><span class="chip chip-ok">Not at Risk</span> probability of Not at Risk is above 50%</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
+<section id="how-it-works" class="section">
+  <div class="container">
+    <h2>How it works</h2>
+    <p class="section-intro">Three simple steps, repeatable any time during the semester.</p>
+    <div class="grid grid-3">
+      <article class="card">
+        <span class="step-num">1</span>
+        <h3>Enter your details</h3>
+        <p>Fill in a short form about your attendance, assignments and study habits.</p>
+      </article>
+      <article class="card">
+        <span class="step-num">2</span>
+        <h3>Get an assessment</h3>
+        <p>A machine-learning model estimates the probability that you are Not at Risk and classifies you as At Risk or Not at Risk.</p>
+      </article>
+      <article class="card">
+        <span class="step-num">3</span>
+        <h3>Track your history</h3>
+        <p>Submit new assessments as the semester moves on and compare how things change.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="inputs" class="section section-alt">
+  <div class="container">
+    <h2>What you will enter</h2>
+    <p class="section-intro">Some fields are required, others are optional.</p>
+    <div class="grid grid-2">
+      <article class="card">
+        <h3>Required <span class="chip chip-req">Mandatory</span></h3>
+        <ul class="check-list">
+          <li>Class attendance</li>
+          <li>Assignment completion</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>Optional <span class="chip chip-opt">Optional</span></h3>
+        <ul class="check-list">
+          <li>Previous CGPA (you can mark it as unavailable)</li>
+          <li>Financial capability</li>
+          <li>Average study hours per week</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="roles" class="section">
+  <div class="container">
+    <h2>Who uses SARPS</h2>
+    <p class="section-intro">Each role sees only what it is allowed to see.</p>
+    <div class="grid grid-3">
+      <article class="card"><h3>Student</h3><p>Views only their own assessments and history.</p></article>
+      <article class="card"><h3>Academic adviser</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card"><h3>Lecturer</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card"><h3>Head of Department</h3><p>Views assessments of students in their department.</p></article>
+      <article class="card"><h3>Administrator</h3><p>Manages accounts and assignments. Cannot view assessments.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="section section-alt">
+  <div class="container narrow">
+    <h2>Sharing and privacy</h2>
+    <p>
+      Before every assessment you must agree to how it is shared. If an assessment
+      is classified as At Risk, it is flagged for the academic staff authorised to
+      see it, so that support can be offered.
+    </p>
+  </div>
+</section>
+{% endblock %}

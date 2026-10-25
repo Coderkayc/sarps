@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf %}
+{% block title %}Create student account | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container form-page">
+    <h1>Create student account</h1>
+    {% if no_departments %}
+      <div class="card"><p>Registration is not open yet: the administrator has not added any departments.</p></div>
+    {% else %}
+    <form method="post" novalidate class="card form-card">
+      {{ csrf() }}
+      {{ field(form.full_name, attrs={"autocomplete": "name"}, required=True) }}
+      {{ field(form.matric_number, required=True) }}
+      {{ field(form.email, attrs={"type": "email", "autocomplete": "email"}, required=True) }}
+      {{ field(form.department_id, required=True) }}
+      {{ field(form.password, attrs={"autocomplete": "new-password"}, hint="At least " ~ config.MIN_PASSWORD_LENGTH ~ " characters.", required=True) }}
+      {{ field(form.confirm, attrs={"autocomplete": "new-password"}, required=True) }}
+      <button class="btn btn-primary btn-block" type="submit">Create account</button>
+    </form>
+    {% endif %}
+    <p class="muted">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>.</p>
+  </div>
+</section>
+{% endblock %}

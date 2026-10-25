@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Assessment result | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="page-head">
+      <h1>Assessment result</h1>
+      <a href="{{ url_for('student.history') }}">Back to history</a>
+    </div>
+    {% with assessment=assessment %}{% include "_result.html" %}{% endwith %}
+    {% if assessment.is_flagged %}
+      <div class="notice notice-info">
+        This result is flagged for authorised academic staff, as you agreed when you submitted it, so that support can be offered.
+        {% if staff %}Staff who can currently see it: {{ staff|map(attribute='full_name')|join(', ') }}.
+        {% else %}No staff are currently linked to your account, so nobody can see it yet. Please contact your department.{% endif %}
+      </div>
+    {% endif %}
+    <p><a class="btn btn-primary" href="{{ url_for('student.assess') }}">Submit another assessment</a></p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gauge.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% macro field(f, attrs={}, hint=None, required=False, optional=False) %}
+{% set merged = attrs.copy() %}
+{% set _ = merged.update({"aria-invalid": "true" if f.errors else "false"}) %}
+{% if hint %}{% set _ = merged.update({"aria-describedby": f.id ~ "-hint"}) %}{% endif %}
+<div class="field{% if f.errors %} has-error{% endif %}">
+  <label for="{{ f.id }}">{{ f.label.text }}
+    {% if required %}<span class="chip chip-req">Required</span>{% elif optional %}<span class="chip chip-opt">Optional</span>{% endif %}
+  </label>
+  {{ f(class="input", **merged) }}
+  {% if hint %}<p class="hint" id="{{ f.id }}-hint">{{ hint }}</p>{% endif %}
+  {% for error in f.errors %}<p class="error-text" role="alert">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro checkbox(f, attrs={}) %}
+<div class="field check{% if f.errors %} has-error{% endif %}">
+  <label class="check-label" for="{{ f.id }}">
+    {{ f(**attrs) }}
+    <span>{{ f.label.text }}</span>
+  </label>
+  {% for error in f.errors %}<p class="error-text" role="alert">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro risk_chip(label) %}
+<span class="chip {{ 'chip-ok' if label == 'Not at Risk' else 'chip-risk' }}">{{ label }}</span>
+{% endmacro %}
+
+{% macro pager(pagination, endpoint) %}
+{% if pagination.pages > 1 %}
+<nav class="pager" aria-label="Pages">
+  {% if pagination.has_prev %}<a class="btn btn-ghost btn-small" href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}">Previous</a>{% endif %}
+  <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
+  {% if pagination.has_next %}<a class="btn btn-ghost btn-small" href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}">Next</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}

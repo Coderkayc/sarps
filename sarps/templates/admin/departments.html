@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf %}
+{% block title %}Departments | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Departments</h1>
+
+    <section class="card form-card" aria-labelledby="add-heading">
+      <h2 id="add-heading">Add a department</h2>
+      <form method="post" novalidate>
+        {{ csrf() }}
+        {{ field(form.name, required=True) }}
+        <button class="btn btn-primary" type="submit">Add department</button>
+      </form>
+    </section>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Department</th><th>Registered students</th></tr></thead>
+        <tbody>
+        {% for department, student_count in rows %}
+          <tr><td>{{ department.name }}</td><td>{{ student_count }}</td></tr>
+        {% else %}
+          <tr><td colspan="2" class="muted">No departments yet. Students cannot register until you add one.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

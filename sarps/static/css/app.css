@@ -1,0 +1,110 @@
+/* SARPS application pages: forms, dashboards, tables, the probability meter.
+   Builds on style.css (colours, layout, buttons). */
+
+/* ---------- Header account area ---------- */
+.nav-account { display: flex; flex-direction: column; gap: 0.5rem; align-items: stretch; }
+.site-nav .btn { padding: 0.45rem 0.9rem; }
+.site-nav a.btn-primary { color: #fff; }
+.site-nav a.btn-ghost { color: var(--navy); }
+.who { display: flex; flex-direction: column; line-height: 1.2; font-weight: 600; color: var(--navy); }
+.who small { font-weight: 400; color: var(--muted); }
+.inline-form { display: inline; margin: 0; }
+.btn-small { padding: 0.45rem 0.9rem; font-size: 0.9rem; }
+.btn-block { display: block; width: 100%; }
+button.btn { font: inherit; font-weight: 600; cursor: pointer; }
+button.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.status-dot-ok { background: var(--ok); }
+
+/* ---------- Flash messages and notices ---------- */
+.flashes { padding-top: 1rem; display: grid; gap: 0.5rem; }
+.flash, .notice {
+  padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface); margin: 0 0 1rem;
+}
+.flash { margin: 0; }
+.flash-success { background: var(--ok-soft); border-color: #b7dfc7; color: #14532d; }
+.flash-error, .notice-risk { background: var(--risk-soft); border-color: #f1bdb9; color: #7a1a14; }
+.flash-info, .notice-info { background: var(--blue-soft); border-color: #c5d3f6; color: var(--navy); }
+.notice-warn { background: #fff4d6; border-color: #ecd48a; color: #5c4400; }
+
+/* ---------- Page layout helpers ---------- */
+.page-head {
+  display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem;
+  align-items: flex-end; justify-content: space-between; margin-bottom: 1rem;
+}
+.page-head h1, .page-head h2 { margin-bottom: 0.15rem; }
+.small { font-size: 0.85rem; }
+code { background: #eef1f7; padding: 0.1rem 0.35rem; border-radius: 5px; font-size: 0.9em; word-break: break-all; }
+.empty { text-align: center; padding: 2rem 1rem; }
+section.card { margin-bottom: 1.25rem; }
+.section .container > h1 { margin-bottom: 0.4rem; }
+
+/* ---------- Forms ---------- */
+.form-page { max-width: 520px; }
+.form-page.wide { max-width: 680px; }
+.form-card { padding: 1.5rem; margin-bottom: 1rem; }
+fieldset { border: 0; margin: 0 0 1.5rem; padding: 0; min-width: 0; }
+legend { font-weight: 700; color: var(--navy); font-size: 1.05rem; padding: 0; margin-bottom: 0.75rem; }
+.field { margin-bottom: 1.1rem; }
+.field label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+.input {
+  display: block; width: 100%; padding: 0.65rem 0.75rem; font: inherit; color: var(--text);
+  background: #fff; border: 1px solid #aeb8cc; border-radius: 8px;
+}
+.input:disabled { background: #eef0f4; color: var(--muted); }
+.has-error .input { border-color: var(--risk); }
+.hint { margin: 0.3rem 0 0; font-size: 0.85rem; color: var(--muted); }
+.error-text { margin: 0.3rem 0 0; font-size: 0.9rem; color: var(--risk); font-weight: 600; }
+.field.check .check-label {
+  display: flex; gap: 0.7rem; align-items: flex-start; font-weight: 400; cursor: pointer;
+}
+.field.check input[type="checkbox"] { flex: none; width: 1.25rem; height: 1.25rem; margin-top: 0.2rem; }
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.table { width: 100%; border-collapse: collapse; min-width: 560px; }
+.table th, .table td { padding: 0.7rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: #f8f9fc; }
+.table tr:last-child td { border-bottom: 0; }
+.row-flag td:first-child { box-shadow: inset 4px 0 0 var(--risk); }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.filter-bar .input { flex: 1 1 200px; width: auto; }
+.pager { display: flex; gap: 1rem; align-items: center; justify-content: center; margin: 1rem 0; }
+
+/* ---------- Statistic tiles ---------- */
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin: 1.25rem 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; display: flex; flex-direction: column; }
+.stat-num { font-size: 1.9rem; font-weight: 700; color: var(--navy); line-height: 1.1; }
+.stat-label { color: var(--muted); font-size: 0.9rem; }
+.stat-risk .stat-num { color: var(--risk); }
+
+/* ---------- Result and probability meter ---------- */
+.result-grid { display: grid; gap: 1rem; margin-bottom: 1.25rem; }
+.result-grid .card { margin-bottom: 0; }
+.gauge { --gauge-fill: var(--risk); max-width: 340px; margin: 0.5rem auto 0; }
+.gauge-ok { --gauge-fill: var(--ok); }
+.gauge-risk { --gauge-fill: var(--risk); }
+.gauge-canvas { position: relative; width: 100%; }
+.gauge-readout {
+  position: absolute; left: 0; right: 0; bottom: 0; text-align: center;
+  display: flex; flex-direction: column; align-items: center; line-height: 1.2;
+}
+.gauge-readout strong { font-size: 2rem; color: var(--gauge-fill); }
+.gauge-readout span { font-size: 0.8rem; color: var(--muted); padding: 0 1rem; }
+.gauge-scale { display: flex; justify-content: space-between; max-width: 340px; margin: 0.25rem auto 1rem; font-size: 0.8rem; color: var(--muted); }
+.classification { text-align: center; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
+.classification .chip { font-size: 1rem; padding: 0.25rem 0.9rem; }
+.facts { display: grid; grid-template-columns: 1fr; gap: 0.15rem 1rem; margin: 0; }
+.facts dt { color: var(--muted); font-size: 0.85rem; margin-top: 0.6rem; }
+.facts dd { margin: 0; font-weight: 600; }
+.chart-box { position: relative; height: 280px; }
+
+@media (min-width: 640px) {
+  .facts { grid-template-columns: max-content 1fr; }
+  .facts dt { margin-top: 0; }
+  .nav-account { flex-direction: row; align-items: center; }
+}
+@media (min-width: 900px) {
+  .result-grid { grid-template-columns: 1.1fr 1fr; align-items: start; }
+  .nav-account { margin-left: 0.75rem; padding-left: 1rem; border-left: 1px solid var(--border); gap: 0.75rem; }
+}

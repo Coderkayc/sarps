@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_macros.html" import risk_chip, pager %}
+{% block title %}Students | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Students</h1>
+    <p class="muted">
+      {% if current_user.role == Role.HOD %}Students in {{ current_user.department.name if current_user.department else "(no department set)" }}.
+      {% else %}Students assigned to you by the administrator.{% endif %}
+      Showing each student's most recent assessment.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat"><span class="stat-num">{{ student_total }}</span><span class="stat-label">Students you can see</span></div>
+      <div class="stat"><span class="stat-num">{{ assessed }}</span><span class="stat-label">With an assessment</span></div>
+      <div class="stat stat-risk"><span class="stat-num">{{ flagged }}</span><span class="stat-label">Flagged At Risk</span></div>
+    </div>
+
+    <form method="get" class="filter-bar" role="search">
+      <label class="sr-only" for="q">Search by name or matric number</label>
+      <input class="input" id="q" type="search" name="q" value="{{ search }}" placeholder="Search name or matric number">
+      {% if only_flagged %}<input type="hidden" name="filter" value="flagged">{% endif %}
+      <button class="btn btn-ghost" type="submit">Search</button>
+      {% if only_flagged %}
+        <a class="btn btn-ghost" href="{{ url_for('staff.dashboard', q=search or None) }}">Show all</a>
+      {% else %}
+        <a class="btn btn-ghost" href="{{ url_for('staff.dashboard', filter='flagged', q=search or None) }}">Flagged only</a>
+      {% endif %}
+    </form>
+
+    {% if pagination.items %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Student</th><th>Matric no.</th><th>Latest probability of Not at Risk</th><th>Result</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+        {% for a in pagination.items %}
+          <tr class="{{ 'row-flag' if a.is_flagged else '' }}">
+            <td><a href="{{ url_for('staff.student_detail', student_id=a.student_id) }}">{{ a.student.full_name }}</a></td>
+            <td>{{ a.student.matric_number }}</td>
+            <td>{{ a.prob_not_at_risk|pct }}</td>
+            <td>{{ risk_chip(a.risk_label) }}</td>
+            <td>{{ a.created_at|dt }}</td>
+            <td><a href="{{ url_for('staff.assessment_detail', assessment_id=a.id) }}">View</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pager(pagination, 'staff.dashboard', filter='flagged' if only_flagged else None, q=search or None) }}
+    {% else %}
+      <div class="card empty">
+        <h2>No assessments to show</h2>
+        <p>{% if search or only_flagged %}Nothing matches this filter.{% else %}Students you are authorised to see have not submitted an assessment yet.{% endif %}</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

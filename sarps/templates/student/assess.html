@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, checkbox, csrf %}
+{% block title %}New assessment | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container form-page wide">
+    <h1>New assessment</h1>
+    <p class="muted">Fields marked <span class="chip chip-req">Required</span> must be filled in. Fields marked <span class="chip chip-opt">Optional</span> can be left blank, though more information can help the estimate.</p>
+
+    {% if not model_ready %}
+      <div class="notice notice-warn">
+        The prediction model has not been installed yet, so assessments cannot be submitted right now.
+        Nothing you enter will be saved.
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate class="card form-card" id="assess-form">
+      {{ csrf() }}
+
+      <fieldset>
+        <legend>Required information</legend>
+        {{ field(form.attendance_pct, attrs={"type": "number", "step": "any", "min": 0, "max": 100, "inputmode": "decimal"}, hint="Percentage of classes you have attended this semester so far (0 to 100).", required=True) }}
+        {{ field(form.assignment_completion_pct, attrs={"type": "number", "step": "any", "min": 0, "max": 100, "inputmode": "decimal"}, hint="Percentage of assignments you have completed so far (0 to 100).", required=True) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>Optional information</legend>
+        {{ field(form.previous_cgpa, attrs={"type": "number", "step": "any", "min": 0, "max": config.CGPA_MAX, "inputmode": "decimal"}, hint="Out of " ~ config.CGPA_MAX ~ ". Leave blank if you prefer not to say.", optional=True) }}
+        {{ checkbox(form.cgpa_unavailable) }}
+        {{ field(form.financial_capability, optional=True, hint="How well you can currently cover your academic costs.") }}
+        {{ field(form.study_hours_per_week, attrs={"type": "number", "step": "any", "min": 0, "max": 100, "inputmode": "decimal"}, hint="Average hours you study outside class each week.", optional=True) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>Sharing agreement <span class="chip chip-req">Required</span></legend>
+        {{ checkbox(form.consent) }}
+      </fieldset>
+
+      <button class="btn btn-primary btn-block" type="submit" {% if not model_ready %}disabled{% endif %}>Submit assessment</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assess_form.js') }}"></script>
+{% endblock %}

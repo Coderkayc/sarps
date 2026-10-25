@@ -1,0 +1,38 @@
+{# One assessment result: meter, classification and the inputs. Used by students and staff. #}
+{% from "_macros.html" import risk_chip %}
+{% set a = assessment %}
+<div class="result-grid">
+  <section class="card result-main" aria-labelledby="result-heading">
+    <h2 id="result-heading">Result</h2>
+    <p class="muted">Submitted {{ a.created_at|dt }}</p>
+
+    <div class="gauge {{ 'gauge-ok' if a.risk_label == 'Not at Risk' else 'gauge-risk' }}" data-gauge="{{ a.prob_not_at_risk }}">
+      <div class="gauge-canvas">
+        <canvas aria-hidden="true"></canvas>
+        <div class="gauge-readout">
+          <strong>{{ a.prob_not_at_risk|pct }}</strong>
+          <span>probability of being Not at Risk</span>
+        </div>
+      </div>
+    </div>
+    <p class="gauge-scale"><span>0%</span><span>50% threshold</span><span>100%</span></p>
+
+    <p class="classification">Classification: {{ risk_chip(a.risk_label) }}</p>
+    <p class="muted small">
+      At Risk means the probability is 50% or below. Not at Risk means it is above 50%.
+      This is a statistical estimate from model <code>{{ a.model_version }}</code>, not a certainty.
+    </p>
+  </section>
+
+  <section class="card" aria-labelledby="inputs-heading">
+    <h2 id="inputs-heading">Information used</h2>
+    <dl class="facts">
+      <dt>Class attendance</dt><dd>{{ "%.1f"|format(a.attendance_pct) }}%</dd>
+      <dt>Assignment completion</dt><dd>{{ "%.1f"|format(a.assignment_completion_pct) }}%</dd>
+      <dt>Previous CGPA</dt>
+      <dd>{% if a.previous_cgpa is not none %}{{ a.previous_cgpa }}{% elif a.cgpa_unavailable %}Not available{% else %}Not provided{% endif %}</dd>
+      <dt>Financial capability</dt><dd>{{ a.financial_capability|capitalize if a.financial_capability else "Not provided" }}</dd>
+      <dt>Study hours per week</dt><dd>{{ a.study_hours_per_week if a.study_hours_per_week is not none else "Not provided" }}</dd>
+    </dl>
+  </section>
+</div>
