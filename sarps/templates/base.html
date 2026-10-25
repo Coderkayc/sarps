@@ -1,3 +1,4 @@
+{% from "_macros.html" import logo %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,22 +6,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ app_name }} | {{ app_full_name }}{% endblock %}</title>
   <meta name="description" content="SARPS helps university students assess their academic risk throughout the semester.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2312284c'/%3E%3Ctext x='16' y='23' font-size='20' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'%3ES%3C/text%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
 </head>
-<body>
+<body class="{% block body_class %}layout-dash{% endblock %}">
   <a class="skip-link" href="#main">Skip to main content</a>
 
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="{{ url_for('main.index') }}" aria-label="{{ app_name }} home">
-        <span class="brand-mark" aria-hidden="true">S</span>
-        <span class="brand-text">
-          <strong>{{ app_name }}</strong>
-          <small>Academic Risk Prediction</small>
-        </span>
-      </a>
+  {% block backdrop %}
+  <div class="backdrop" aria-hidden="true"><span class="blob blob-1"></span><span class="blob blob-2"></span><span class="blob blob-3"></span></div>
+  {% endblock %}
+
+  {% block header %}
+  <header class="site-header glass">
+    <div class="header-inner">
+      <a class="brand logo-link" href="{{ url_for('main.index') }}" aria-label="{{ app_name }} home">{{ logo() }}</a>
 
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
         <span class="sr-only">Toggle menu</span>
@@ -48,7 +48,10 @@
         {% endblock %}
         <span class="nav-account">
           {% if current_user.is_authenticated %}
-            <span class="who">{{ current_user.full_name }} <small>{{ current_user.role_label }}</small></span>
+            <span class="who">
+              <span class="avatar" aria-hidden="true">{{ current_user.full_name[:1]|upper }}</span>
+              <span>{{ current_user.full_name }}<small>{{ current_user.role_label }}</small></span>
+            </span>
             <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button class="btn btn-ghost btn-small" type="submit">Sign out</button>
@@ -61,6 +64,7 @@
       </nav>
     </div>
   </header>
+  {% endblock %}
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -76,12 +80,14 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% block footer %}
   <footer class="site-footer">
     <div class="container footer-inner">
       <p><strong>{{ app_name }}</strong>: {{ app_full_name }}</p>
-      <p class="muted">Final-year university project. Predictions are estimates, not certainties.</p>
+      <p>Final-year university project. Predictions are estimates, not certainties.</p>
     </div>
   </footer>
+  {% endblock %}
 
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   {% block scripts %}{% endblock %}

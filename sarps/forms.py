@@ -15,6 +15,7 @@ from wtforms.validators import (DataRequired, Email, EqualTo, InputRequired, Len
 from sarps.constants import CONSENT_TEXT, FINANCIAL_CHOICES, ROLE_LABELS, Role
 from sarps.extensions import db
 from sarps.models import Department, User
+from sarps.security import password_problems
 
 
 # ---------- small helpers ----------
@@ -37,9 +38,9 @@ def finite_number(form, field):
 
 
 def password_rules(form, field):
-    minimum = current_app.config["MIN_PASSWORD_LENGTH"]
-    if len(field.data or "") < minimum:
-        raise ValidationError(f"Password must be at least {minimum} characters.")
+    problems = password_problems(field.data, current_app.config["MIN_PASSWORD_LENGTH"])
+    if problems:
+        raise ValidationError("Password needs: " + ", ".join(problems) + ".")
 
 
 def _email_not_taken(form, field):

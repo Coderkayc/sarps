@@ -3,6 +3,8 @@
 create_app() builds a fresh Flask app. Using a function (the "application
 factory" pattern) lets the tests build their own app with a throw-away database.
 """
+from datetime import datetime, timezone
+
 from flask import Flask, render_template, request
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
@@ -67,6 +69,8 @@ def register_template_helpers(app):
         return {
             "app_name": app.config["APP_NAME"],
             "app_full_name": app.config["APP_FULL_NAME"],
+            "institution": app.config["INSTITUTION"],
+            "now_year": datetime.now(timezone.utc).year,
             "model_status": app.extensions["prediction"].status,
             "Role": Role,
             "STAFF_ROLES": STAFF_ROLES,

@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sarps.constants import Role
 from sarps.extensions import db
 from sarps.models import Department, User
+from sarps.security import password_problems
 
 
 def register_commands(app):
@@ -34,9 +35,9 @@ def register_commands(app):
     def create_admin(name, email, password):
         """Create the first administrator account."""
         email = email.strip().lower()
-        minimum = app.config["MIN_PASSWORD_LENGTH"]
-        if len(password) < minimum:
-            raise click.ClickException(f"Password must be at least {minimum} characters.")
+        problems = password_problems(password, app.config["MIN_PASSWORD_LENGTH"])
+        if problems:
+            raise click.ClickException("Password needs: " + ", ".join(problems) + ".")
         if db.session.scalar(select(User).where(User.email == email)):
             raise click.ClickException("An account with that email already exists.")
         admin = User(full_name=name.strip(), email=email, role=Role.ADMIN)

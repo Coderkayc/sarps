@@ -1,85 +1,128 @@
 {% extends "base.html" %}
+{% from "_macros.html" import logo %}
+{% block body_class %}layout-landing landing-page{% endblock %}
 
-{% block nav_links %}
-  <a href="#how-it-works">How it works</a>
-  <a href="#inputs">What you enter</a>
-  <a href="#roles">Who uses it</a>
-  <a href="#privacy">Privacy</a>
-  {% if current_user.is_authenticated %}<a href="{{ url_for('main.dashboard') }}">My dashboard</a>{% endif %}
+{# The landing page has its own floating navigation bar instead of the app header. #}
+{% block header %}
+<div class="landing-nav-wrap">
+  <nav class="landing-nav" aria-label="Main">
+    <a class="logo-link" href="{{ url_for('main.index') }}" aria-label="{{ app_name }} home">{{ logo() }}</a>
+    <div class="landing-links">
+      <a href="#about">About</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#inputs">What you enter</a>
+      <a href="#roles">Who uses it</a>
+      <a href="#privacy">Privacy</a>
+    </div>
+    <div class="landing-actions">
+      {% if current_user.is_authenticated %}
+        <a class="btn btn-primary btn-small" href="{{ url_for('main.dashboard') }}">My dashboard</a>
+      {% else %}
+        <a class="btn btn-ghost btn-small" href="{{ url_for('auth.login') }}">Sign in</a>
+        <a class="btn btn-primary btn-small" href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+</div>
 {% endblock %}
 
 {% block content %}
 {% set model_ready = model_status().available %}
-<section class="hero">
-  <div class="container hero-inner">
-    <div class="hero-copy">
-      <p class="eyebrow">Student Academic Risk Prediction System</p>
-      <h1>Know where you stand, early enough to act.</h1>
-      <p class="lead">
-        SARPS helps you check your academic risk at any point in the semester.
-        Enter a few details about your studies, get an assessment, and come back
-        with a new one whenever your situation changes.
-      </p>
-      <div class="hero-actions">
-        {% if current_user.is_authenticated %}
-          <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
-        {% else %}
-          <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create student account</a>
-          <a class="btn btn-ghost" href="{{ url_for('auth.login') }}">Sign in</a>
-        {% endif %}
-      </div>
-      <p class="status-note">
-        <span class="status-dot {{ 'status-dot-ok' if model_ready else '' }}" aria-hidden="true"></span>
+<section class="landing-hero">
+  <span class="blob blob-1" aria-hidden="true"></span>
+  <span class="blob blob-2" aria-hidden="true"></span>
+  <div class="landing-hero-inner animate-rise">
+    <p class="eyebrow">For students at {{ institution }}</p>
+    <h1>{{ app_name }}</h1>
+    <p class="tagline">Know where you stand, early enough to act.</p>
+    <p class="lead">
+      {{ app_name }} helps students check their academic risk at any point in the semester,
+      so they can act instead of react.
+    </p>
+    <div class="hero-actions">
+      {% if current_user.is_authenticated %}
+        <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create student account</a>
+        <a class="btn hero-secondary" href="{{ url_for('auth.login') }}">Sign in</a>
+      {% endif %}
+    </div>
+    <p class="hero-rule">
+      <span class="chip chip-risk">At Risk</span> 50% or below
+      <span aria-hidden="true">&middot;</span>
+      <span class="chip chip-ok">Not at Risk</span> above 50%
+    </p>
+    <p class="status-note">
+      <span class="status-dot {{ 'status-dot-ok' if model_ready else '' }}" aria-hidden="true"></span>
+      <span>
         {% if model_ready %}
           The prediction model is installed and assessments are open.
         {% else %}
           The prediction model has not been installed yet, so assessments cannot be submitted.
         {% endif %}
-      </p>
-    </div>
-
-    <aside class="hero-panel" aria-label="How results are shown">
-      <p class="panel-label">How results are classified</p>
-      <div class="meter-placeholder" role="img" aria-label="Illustration area for the probability meter">
-        <span>Probability meter</span>
-        <small>Shown after you submit an assessment</small>
-      </div>
-      <ul class="panel-list">
-        <li><span class="chip chip-risk">At Risk</span> probability of Not at Risk is 50% or below</li>
-        <li><span class="chip chip-ok">Not at Risk</span> probability of Not at Risk is above 50%</li>
-      </ul>
-    </aside>
+      </span>
+    </p>
   </div>
 </section>
 
-<section id="how-it-works" class="section">
+<section id="about" class="section">
   <div class="container">
-    <h2>How it works</h2>
-    <p class="section-intro">Three simple steps, repeatable any time during the semester.</p>
+    <div class="about-intro">
+      <div>
+        <p class="eyebrow">About</p>
+        <h2>A gentle early warning for your semester.</h2>
+      </div>
+      <p class="lead">Check in as often as you like. Each assessment is saved, so you can see how things change.</p>
+    </div>
     <div class="grid grid-3">
-      <article class="card">
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#128200;</span>
+        <h3>Quick risk assessment</h3>
+        <p>Answer a short form about attendance, assignments and study habits, and see your result in seconds.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#128339;</span>
+        <h3>Track your history</h3>
+        <p>Submit a new assessment whenever your situation changes and compare it with the earlier ones.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#129309;</span>
+        <h3>Support when you need it</h3>
+        <p>If an assessment is classified At Risk, it is flagged for the academic staff authorised to see it, so help can reach you early.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="section section-sky">
+  <div class="container">
+    <p class="eyebrow">How it works</p>
+    <h2>Three simple steps</h2>
+    <p class="section-intro">Repeatable any time during the semester.</p>
+    <div class="grid grid-3">
+      <article class="card glass">
         <span class="step-num">1</span>
         <h3>Enter your details</h3>
         <p>Fill in a short form about your attendance, assignments and study habits.</p>
       </article>
-      <article class="card">
+      <article class="card glass">
         <span class="step-num">2</span>
         <h3>Get an assessment</h3>
         <p>A machine-learning model estimates the probability that you are Not at Risk and classifies you as At Risk or Not at Risk.</p>
       </article>
-      <article class="card">
+      <article class="card glass">
         <span class="step-num">3</span>
         <h3>Track your history</h3>
-        <p>Submit new assessments as the semester moves on and compare how things change.</p>
+        <p>Submit new assessments as the semester moves on and see how things change.</p>
       </article>
     </div>
   </div>
 </section>
 
-<section id="inputs" class="section section-alt">
+<section id="inputs" class="section">
   <div class="container">
-    <h2>What you will enter</h2>
-    <p class="section-intro">Some fields are required, others are optional.</p>
+    <p class="eyebrow">What you will enter</p>
+    <h2>Some fields are required, others are optional</h2>
     <div class="grid grid-2">
       <article class="card">
         <h3>Required <span class="chip chip-req">Mandatory</span></h3>
@@ -100,22 +143,23 @@
   </div>
 </section>
 
-<section id="roles" class="section">
+<section id="roles" class="section section-sky">
   <div class="container">
-    <h2>Who uses SARPS</h2>
-    <p class="section-intro">Each role sees only what it is allowed to see.</p>
+    <p class="eyebrow">Who uses {{ app_name }}</p>
+    <h2>Each role sees only what it is allowed to see</h2>
     <div class="grid grid-3">
-      <article class="card"><h3>Student</h3><p>Views only their own assessments and history.</p></article>
-      <article class="card"><h3>Academic adviser</h3><p>Views assessments of the students assigned to them.</p></article>
-      <article class="card"><h3>Lecturer</h3><p>Views assessments of the students assigned to them.</p></article>
-      <article class="card"><h3>Head of Department</h3><p>Views assessments of students in their department.</p></article>
-      <article class="card"><h3>Administrator</h3><p>Manages accounts and assignments. Cannot view assessments.</p></article>
+      <article class="card glass"><h3>Student</h3><p>Views only their own assessments and history.</p></article>
+      <article class="card glass"><h3>Academic adviser</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card glass"><h3>Lecturer</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card glass"><h3>Head of Department</h3><p>Views assessments of students in their department.</p></article>
+      <article class="card glass"><h3>Administrator</h3><p>Manages accounts and assignments. Cannot view assessments.</p></article>
     </div>
   </div>
 </section>
 
-<section id="privacy" class="section section-alt">
+<section id="privacy" class="section">
   <div class="container narrow">
+    <p class="eyebrow">Privacy</p>
     <h2>Sharing and privacy</h2>
     <p>
       Before every assessment you must agree to how it is shared. If an assessment
@@ -124,4 +168,13 @@
     </p>
   </div>
 </section>
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="container footer-inner">
+    {{ logo() }}
+    <p>&copy; {{ now_year }} {{ app_name }} &middot; {{ institution }}</p>
+  </div>
+</footer>
 {% endblock %}

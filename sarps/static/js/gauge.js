@@ -14,7 +14,7 @@
       if (!arc) return;
       var ctx = chart.ctx;
       ctx.save();
-      ctx.strokeStyle = "#12284c";
+      ctx.strokeStyle = "#2a2950";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(arc.x, arc.y - arc.outerRadius - 4);
@@ -29,11 +29,11 @@
     var canvas = gauge.querySelector("canvas");
     if (!canvas || !isFinite(value)) return;
     value = Math.min(100, Math.max(0, value));
-    var fill = getComputedStyle(gauge).getPropertyValue("--gauge-fill").trim() || "#2a5bd7";
+    var fill = getComputedStyle(gauge).getPropertyValue("--gauge-fill").trim() || "#5f67b0";
 
     new Chart(canvas, {
       type: "doughnut",
-      data: { datasets: [{ data: [value, 100 - value], backgroundColor: [fill, "#e3e8f1"], borderWidth: 0 }] },
+      data: { datasets: [{ data: [value, 100 - value], backgroundColor: [fill, "#dfe6f3"], borderWidth: 0 }] },
       options: {
         rotation: -90,
         circumference: 180,

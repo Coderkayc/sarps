@@ -1,26 +1,29 @@
-{% extends "base.html" %}
-{% from "_macros.html" import field, csrf %}
+{% extends "layout_auth.html" %}
+{% from "_macros.html" import field, password_field, csrf %}
 {% block title %}Create student account | {{ app_name }}{% endblock %}
-
-{% block content %}
-<section class="section">
-  <div class="container form-page">
-    <h1>Create student account</h1>
-    {% if no_departments %}
-      <div class="card"><p>Registration is not open yet: the administrator has not added any departments.</p></div>
-    {% else %}
-    <form method="post" novalidate class="card form-card">
-      {{ csrf() }}
-      {{ field(form.full_name, attrs={"autocomplete": "name"}, required=True) }}
-      {{ field(form.matric_number, required=True) }}
-      {{ field(form.email, attrs={"type": "email", "autocomplete": "email"}, required=True) }}
-      {{ field(form.department_id, required=True) }}
-      {{ field(form.password, attrs={"autocomplete": "new-password"}, hint="At least " ~ config.MIN_PASSWORD_LENGTH ~ " characters.", required=True) }}
-      {{ field(form.confirm, attrs={"autocomplete": "new-password"}, required=True) }}
-      <button class="btn btn-primary btn-block" type="submit">Create account</button>
-    </form>
-    {% endif %}
-    <p class="muted">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>.</p>
+{% block panel_class %} wide{% endblock %}
+{% block auth_title %}Create student account{% endblock %}
+{% block auth_subtitle %}Register to check your academic risk any time in the semester.{% endblock %}
+{% block auth_body %}
+{% if no_departments %}
+  <div class="notice notice-warn"><p>Registration is not open yet: the administrator has not added any departments.</p></div>
+{% else %}
+<form method="post" novalidate>
+  {{ csrf() }}
+  <div class="form-grid">
+    {{ field(form.full_name, attrs={"autocomplete": "name"}, required=True) }}
+    {{ field(form.matric_number, required=True) }}
+    {{ field(form.email, attrs={"type": "email", "autocomplete": "email"}, required=True) }}
+    {{ field(form.department_id, required=True) }}
+    <div class="span-2">{{ password_field(form.password, rules=True) }}</div>
+    <div class="span-2">{{ password_field(form.confirm) }}</div>
   </div>
-</section>
+  <button class="btn btn-primary btn-block" type="submit">Create account</button>
+</form>
+{% endif %}
 {% endblock %}
+{% block auth_links %}
+<p>Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+<p><a href="{{ url_for('main.index') }}">&larr; Back to home</a></p>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/password.js') }}"></script>{% endblock %}

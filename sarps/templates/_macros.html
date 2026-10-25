@@ -37,3 +37,34 @@
 </nav>
 {% endif %}
 {% endmacro %}
+
+{% macro logo(light=False) %}
+<span class="logo">
+  <span class="logo-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fdfcf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14"/><path d="M10 20V9"/><path d="M16 20V12"/><path d="M3 6l6 4 5-5 7 4"/></svg>
+  </span>
+  <span>SARPS</span>
+</span>
+{% endmacro %}
+
+{% macro password_field(f, hint=None, rules=False, autocomplete="new-password") %}
+<div class="field{% if f.errors %} has-error{% endif %}">
+  <label for="{{ f.id }}">{{ f.label.text }}</label>
+  <div class="password-wrap">
+    {% set pw_attrs = {"aria-invalid": "true" if f.errors else "false"} %}
+    {% if rules %}{% set _ = pw_attrs.update({"data-password-rules": "true"}) %}{% endif %}
+    {{ f(class="input", autocomplete=autocomplete, **pw_attrs) }}
+    <button type="button" class="password-toggle" data-toggle-for="{{ f.id }}" aria-label="Show password" aria-pressed="false">Show</button>
+  </div>
+  {% if rules %}
+  <ul class="password-rules" data-rules-for="{{ f.id }}" data-min="{{ config.MIN_PASSWORD_LENGTH }}" aria-label="Password requirements">
+    <li data-rule="length">At least {{ config.MIN_PASSWORD_LENGTH }} characters</li>
+    <li data-rule="upper">One uppercase letter</li>
+    <li data-rule="digit">One number</li>
+    <li data-rule="special">One special character (@, #, !, $ ...)</li>
+  </ul>
+  {% endif %}
+  {% if hint %}<p class="hint">{{ hint }}</p>{% endif %}
+  {% for error in f.errors %}<p class="error-text" role="alert">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
