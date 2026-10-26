@@ -1,0 +1,45 @@
+{
+  "feature_columns": [
+    "attendance_pct",
+    "assignment_completion_pct",
+    "previous_cgpa",
+    "financial_capability",
+    "study_hours_per_week"
+  ],
+  "unused_features": [
+    "assignment_completion_pct"
+  ],
+  "cgpa_max": 5.0,
+  "positive_class": "not_at_risk",
+  "model_version": "logistic-20261026-090743-f0fc6020",
+  "trained_at": "2026-10-26T09:07:43.256406+00:00",
+  "algorithm": "logistic",
+  "balanced": true,
+  "n_rows": 894,
+  "class_counts": {
+    "at_risk": 235,
+    "not_at_risk": 659
+  },
+  "metrics": {
+    "test_rows": 179,
+    "accuracy": 0.7263,
+    "roc_auc": 0.774,
+    "at_risk_recall": 0.6809,
+    "at_risk_precision": 0.4848,
+    "not_at_risk_recall": 0.7424,
+    "f1_not_at_risk": 0.8,
+    "confusion_matrix": {
+      "true_at_risk_predicted_at_risk": 32,
+      "true_at_risk_predicted_not_at_risk": 15,
+      "true_not_at_risk_predicted_at_risk": 34,
+      "true_not_at_risk_predicted_not_at_risk": 98
+    },
+    "cv_roc_auc_mean": 0.7259,
+    "cv_roc_auc_std": 0.0543,
+    "cv_folds": 5
+  },
+  "data_notes": [
+    "'assignment_completion_pct' is not in this dataset. The model does not use it."
+  ],
+  "sklearn_version": "1.9.1"
+}

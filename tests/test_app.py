@@ -22,7 +22,7 @@ def test_landing_page_reports_model_when_installed(model_client):
 
 
 def test_static_files_are_served(client):
-    for path in ["css/style.css", "css/app.css", "js/main.js", "js/gauge.js", "js/charts.js",
+    for path in ["css/tailwind.css", "js/main.js", "js/gauge.js", "js/charts.js",
                  "js/assess_form.js", "vendor/chart.umd.min.js"]:
         assert client.get(f"/static/{path}").status_code == 200, path
 

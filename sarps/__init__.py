@@ -69,7 +69,7 @@ def register_template_helpers(app):
         return {
             "app_name": app.config["APP_NAME"],
             "app_full_name": app.config["APP_FULL_NAME"],
-            "institution": app.config["INSTITUTION"],
+            "institution": app.config.get("INSTITUTION", "University of Nigeria, Nsukka"),
             "now_year": datetime.now(timezone.utc).year,
             "model_status": app.extensions["prediction"].status,
             "Role": Role,

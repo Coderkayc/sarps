@@ -4,8 +4,8 @@
 
 {% block content %}
 <section class="section">
-  <div class="container">
-    <div class="page-head">
+  <div class="wrap">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div>
         <h1>Welcome, {{ current_user.full_name.split()[0] }}</h1>
         <p class="muted">{{ current_user.department.name if current_user.department else "" }} · {{ current_user.matric_number }}</p>
@@ -33,7 +33,7 @@
         </div>
       {% endif %}
 
-      <div class="page-head">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <h2>Recent assessments</h2>
         <a href="{{ url_for('student.history') }}">View all {{ total }}</a>
       </div>

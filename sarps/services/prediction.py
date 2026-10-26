@@ -41,6 +41,7 @@ class PredictionService:
 
     def init_app(self, app):
         self._path = Path(app.config["MODEL_PATH"])
+        self._cgpa_max = app.config.get("CGPA_MAX")
         app.extensions["prediction"] = self
 
     # The file is re-checked on each use, so a newly trained model is picked up
@@ -64,12 +65,15 @@ class PredictionService:
                 log.exception("Could not load the model file")
                 self._bundle, self._error = None, str(exc)
 
-    @staticmethod
-    def _validate(bundle):
+    def _validate(self, bundle):
         if not isinstance(bundle, dict) or "pipeline" not in bundle:
             raise ValueError("File is not a SARPS model bundle.")
         if bundle.get("feature_columns") != FEATURE_COLUMNS:
             raise ValueError("Model was trained on different inputs than this app collects.")
+        trained_max = bundle.get("cgpa_max")
+        if trained_max is not None and self._cgpa_max is not None and float(trained_max) != float(self._cgpa_max):
+            raise ValueError(f"Model was trained on a CGPA scale of {trained_max}, "
+                             f"but CGPA_MAX in .env is {self._cgpa_max}. Make them match.")
         pipeline = bundle["pipeline"]
         if not hasattr(pipeline, "predict_proba"):
             raise ValueError("Model cannot output probabilities.")
@@ -86,6 +90,7 @@ class PredictionService:
             "version": self._bundle.get("model_version", "unknown"),
             "trained_at": self._bundle.get("trained_at"),
             "n_rows": self._bundle.get("n_rows"),
+            "unused_features": list(self._bundle.get("unused_features", [])),
             "metrics": self._bundle.get("metrics"),
         }
 
@@ -97,6 +102,10 @@ class PredictionService:
         self._refresh()
         if self._bundle is None:
             raise ModelNotAvailable("No trained model is available.")
+        # Inputs the model was trained without are blanked, exactly as in training.
+        features = dict(features)
+        for name in self._bundle.get("unused_features", []):
+            features[name] = np.nan
         try:
             proba = self._bundle["pipeline"].predict_proba(to_frame([features]))[0][1]
         except Exception as exc:

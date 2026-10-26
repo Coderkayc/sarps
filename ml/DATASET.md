@@ -38,3 +38,16 @@ The script prints accuracy, ROC AUC, and especially **at_risk_recall** (the shar
 - A model is only as good as its data: a small or biased dataset gives an unreliable model.
 - The percentage shown to students is the model's estimated probability, not a certainty.
 - Retrain whenever you get new data. The app picks up the new model file automatically.
+
+## The model currently included (read before you present it)
+`ml/models/sarps_model.joblib` was trained on the public IUBAT (Bangladesh) survey, 894 CS students, using `ml/prepare_iubat.py`. Command used:
+```bash
+python -m ml.train --data ml/data/iubat_training.csv --unused assignment_completion_pct --algorithm logistic --balanced
+```
+Be upfront about these limits in your report:
+- **Label:** At Risk = the student ever fell on academic probation (26% of students). It is a real outcome, but "ever" does not say when.
+- **Assignment completion is not in that dataset.** The form still collects it, but the model ignores it (the app says so on the form and result).
+- **Proxies:** previous CGPA = the student's current CGPA, rescaled from 4.0 to 5.0. Financial capability = family-income thirds (low/medium/high) from that sample.
+- **Different country and university** from yours, so treat results as a demonstration. Retrain with your own records when you can.
+- **Accuracy on unseen students:** about 73% accuracy, ROC AUC 0.77 (5-fold cross-validated 0.73), and it catches about 68% of At Risk students while wrongly flagging about 26% of the others. `--balanced` makes the model lean towards At Risk, so the percentage is a risk score, not a calibrated probability.
+- **CGPA scale:** the model was trained on a 5.0 scale. `CGPA_MAX` in `.env` must stay 5.0, otherwise the app refuses to use the model.

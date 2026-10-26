@@ -35,6 +35,10 @@ from sklearn.preprocessing import StandardScaler
 from ml.features import FEATURE_COLUMNS, LABEL_COLUMN, financial_to_number
 
 import joblib
+import warnings
+
+# Expected when --unused is used: that column is intentionally empty.
+warnings.filterwarnings("ignore", message="Skipping features without any observed values")
 
 DEFAULT_OUT = Path(__file__).resolve().parent / "models" / "sarps_model.joblib"
 MIN_ROWS = 60
@@ -45,8 +49,17 @@ class DatasetError(Exception):
     """The dataset has a problem the user must fix. The message says what."""
 
 
-def load_and_check_dataset(csv_path, cgpa_max=5.0):
-    """Read the CSV, validate it, and return (features DataFrame, labels Series, notes)."""
+def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
+    """Read the CSV, validate it, and return (features DataFrame, labels Series, notes).
+
+    `unused` lists input columns the dataset does not really contain (for example
+    assignment completion). They are blanked out so the model cannot learn from
+    them, and they are not required to be filled in.
+    """
+    unused = list(unused)
+    unknown = [c for c in unused if c not in FEATURE_COLUMNS]
+    if unknown:
+        raise DatasetError(f"Unknown column(s) in --unused: {', '.join(unknown)}.")
     try:
         raw = pd.read_csv(csv_path)
     except Exception as exc:
@@ -63,6 +76,9 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0):
 
     df = raw[needed].copy()
     notes = []
+    for col in unused:
+        df[col] = np.nan
+        notes.append(f"'{col}' is not in this dataset. The model does not use it.")
 
     # Convert text to numbers. Anything unreadable becomes blank (NaN) and is reported.
     for col in ["attendance_pct", "assignment_completion_pct", "previous_cgpa",
@@ -86,14 +102,15 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0):
         raise DatasetError(f"'{LABEL_COLUMN}' must contain only 0 or 1 (1 = Not at Risk, 0 = At Risk).")
 
     # The two required inputs must be present.
-    required_blank = df[["attendance_pct", "assignment_completion_pct"]].isna().any(axis=1)
+    required = [c for c in ["attendance_pct", "assignment_completion_pct"] if c not in unused]
+    required_blank = df[required].isna().any(axis=1)
     if required_blank.any():
-        notes.append(f"Dropped {int(required_blank.sum())} row(s) missing attendance or assignment completion.")
+        notes.append(f"Dropped {int(required_blank.sum())} row(s) missing a required input ({', '.join(required)}).")
         df = df[~required_blank]
 
     # Impossible values mean the data has a mistake. Stop instead of guessing.
     problems = []
-    for col in ["attendance_pct", "assignment_completion_pct"]:
+    for col in required:
         bad = int(((df[col] < 0) | (df[col] > 100)).sum())
         if bad:
             problems.append(f"{bad} row(s) have '{col}' outside 0-100")
@@ -154,9 +171,9 @@ def evaluate(pipeline, x_test, y_test):
 
 
 def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=False,
-                test_size=0.2, seed=42, cgpa_max=5.0):
+                test_size=0.2, seed=42, cgpa_max=5.0, unused=()):
     """Run the whole training procedure. Returns the saved bundle."""
-    x, y, notes = load_and_check_dataset(csv_path, cgpa_max=cgpa_max)
+    x, y, notes = load_and_check_dataset(csv_path, cgpa_max=cgpa_max, unused=unused)
 
     x_train, x_test, y_train, y_test = train_test_split(
         x, y, test_size=test_size, random_state=seed, stratify=y)
@@ -184,6 +201,8 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
     bundle = {
         "pipeline": final,
         "feature_columns": list(FEATURE_COLUMNS),
+        "unused_features": list(unused),
+        "cgpa_max": cgpa_max,
         "positive_class": "not_at_risk",
         "model_version": f"{algorithm}-{stamp:%Y%m%d-%H%M%S}-{data_hash}",
         "trained_at": stamp.isoformat(),
@@ -218,11 +237,13 @@ def main(argv=None):
     parser.add_argument("--test-size", type=float, default=0.2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--cgpa-max", type=float, default=Config.CGPA_MAX)
+    parser.add_argument("--unused", nargs="*", default=[], metavar="COLUMN",
+                        help="Input columns missing from your dataset, e.g. assignment_completion_pct")
     args = parser.parse_args(argv)
 
     try:
         bundle = train_model(args.data, args.out, args.algorithm, args.balanced,
-                             args.test_size, args.seed, args.cgpa_max)
+                             args.test_size, args.seed, args.cgpa_max, args.unused)
     except DatasetError as exc:
         print(f"\nDataset problem: {exc}", file=sys.stderr)
         return 1

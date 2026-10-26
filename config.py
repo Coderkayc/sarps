@@ -33,6 +33,9 @@ class Config:
 
     APP_NAME = "SARPS"
     APP_FULL_NAME = "Student Academic Risk Prediction System"
+    # Shown on the landing page and footer. Taken from your Lovable design;
+    # change it in .env (INSTITUTION=...) if your university is different.
+    INSTITUTION = os.environ.get("INSTITUTION", "University of Nigeria, Nsukka")
 
     SQLALCHEMY_DATABASE_URI = _database_uri()
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}

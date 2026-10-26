@@ -3,7 +3,7 @@ from sarps.constants import Role
 from sarps.extensions import db
 from sarps.models import Assessment, Department, StaffAssignment, User
 
-PASSWORD = "password123"
+PASSWORD = "Password123!"
 
 VALID_ASSESSMENT = {
     "attendance_pct": "80",

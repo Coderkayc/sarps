@@ -58,7 +58,7 @@ def test_duplicate_matric_rejected(client):
 def test_short_password_and_mismatch_rejected(client):
     dept = make_department()
     assert "at least 8" in register(client, dept, password="short", confirm="short").get_data(as_text=True)
-    assert "do not match" in register(client, dept, confirm="different123").get_data(as_text=True)
+    assert "do not match" in register(client, dept, confirm="Different123!").get_data(as_text=True)
     assert db.session.scalar(select(User).where(User.email == "ada@example.com")) is None
 
 
@@ -151,3 +151,11 @@ def test_roles_cannot_open_other_roles_pages(client, role, forbidden):
     login(client, "user@example.com")
     for path in forbidden:
         assert client.get(path).status_code == 403, path
+
+
+def test_password_policy_requires_upper_number_and_special(client):
+    dept = make_department()
+    for weak, needs in [("alllowercase1!", "uppercase"), ("NoNumbers!!", "number"), ("NoSpecial123", "special")]:
+        html = register(client, dept, password=weak, confirm=weak).get_data(as_text=True)
+        assert needs in html
+    assert db.session.scalar(select(User).where(User.email == "ada@example.com")) is None

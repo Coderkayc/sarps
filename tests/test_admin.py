@@ -15,7 +15,7 @@ def admin_client(client):
 
 def staff_form(dept_id=0, **overrides):
     data = {"full_name": "New Adviser", "email": "New.Adviser@x.com", "role": Role.ADVISER,
-            "department_id": str(dept_id), "password": "temporary123"}
+            "department_id": str(dept_id), "password": "Temporary123!"}
     data.update(overrides)
     return data
 
@@ -26,14 +26,14 @@ def test_admin_creates_staff_account(client):
     assert response.status_code == 302
     staff = db.session.scalar(select(User).where(User.email == "new.adviser@x.com"))
     assert staff.role == Role.ADVISER and staff.active
-    assert staff.password_hash != "temporary123" and staff.check_password("temporary123")
+    assert staff.password_hash != "Temporary123!" and staff.check_password("Temporary123!")
 
 
 def test_new_staff_can_sign_in(client):
     admin_client(client)
     client.post("/admin/users", data=staff_form())
     client.post("/logout")
-    assert login(client, "new.adviser@x.com", "temporary123").headers["Location"].endswith("/staff/")
+    assert login(client, "new.adviser@x.com", "Temporary123!").headers["Location"].endswith("/staff/")
 
 
 def test_head_of_department_needs_a_department(client):

@@ -7,8 +7,7 @@
   <title>{% block title %}{{ app_name }} | {{ app_full_name }}{% endblock %}</title>
   <meta name="description" content="SARPS helps university students assess their academic risk throughout the semester.">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
 </head>
 <body class="{% block body_class %}layout-dash{% endblock %}">
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -68,7 +67,7 @@
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="container flashes">
+    <div class="wrap flashes">
       {% for category, message in messages %}
         <div class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</div>
       {% endfor %}
@@ -82,7 +81,7 @@
 
   {% block footer %}
   <footer class="site-footer">
-    <div class="container footer-inner">
+    <div class="wrap footer-inner">
       <p><strong>{{ app_name }}</strong>: {{ app_full_name }}</p>
       <p>Final-year university project. Predictions are estimates, not certainties.</p>
     </div>

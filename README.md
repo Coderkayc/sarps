@@ -4,8 +4,19 @@ Flask + MySQL + scikit-learn web app. Students enter their academic details, rec
 
 **Classification rule:** probability of Not at Risk below 50% = At Risk, exactly 50% = At Risk, above 50% = Not at Risk.
 
-## Important: no model is included
-The app never invents predictions. Until you train a model from a real dataset, the assessment form is disabled and the server refuses submissions. See `ml/DATASET.md`.
+See `LOVABLE_CONVERSION.md` for how the Lovable design was ported.
+
+## Frontend (Tailwind CSS + Chart.js)
+Pages are HTML (Jinja templates) styled with Tailwind CSS v4, with plain JavaScript and Chart.js for the meter and history chart. The built stylesheet `sarps/static/css/tailwind.css` is included, so you do NOT need Node just to run the app. Only if you change styles or template classes:
+```bash
+cd frontend
+npm install
+npm run build      # or: npm run watch
+```
+Source styles live in `frontend/src/input.css`.
+
+## About the included model
+The app never invents predictions. It ships with a model trained on a real public dataset (Bangladesh, 894 students) so you can demonstrate it. That model has real limits (no assignment data, a different country, modest accuracy), listed in `ml/DATASET.md`. Replace it with your own university's data when you have it: `python -m ml.train --data your.csv`. Without any model file, the form is disabled and the server refuses submissions.
 
 ## 1. Install
 ```bash

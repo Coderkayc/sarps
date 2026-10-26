@@ -4,7 +4,7 @@
 
 {% block content %}
 <section class="section">
-  <div class="container form-page wide">
+  <div class="wrap form-page wide">
     <h1>New assessment</h1>
     <p class="muted">Fields marked <span class="chip chip-req">Required</span> must be filled in. Fields marked <span class="chip chip-opt">Optional</span> can be left blank, though more information can help the estimate.</p>
 
@@ -12,6 +12,14 @@
       <div class="notice notice-warn">
         The prediction model has not been installed yet, so assessments cannot be submitted right now.
         Nothing you enter will be saved.
+      </div>
+    {% endif %}
+
+    {% if model_ready and model_status().unused_features %}
+      <div class="notice notice-info">
+        Please still fill in every required field. Note: the current model was trained on a dataset without
+        {{ model_status().unused_features|join(", ")|replace("_pct", "")|replace("_", " ") }}, so that answer is saved with your
+        assessment but does not change your result.
       </div>
     {% endif %}
 

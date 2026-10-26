@@ -28,7 +28,7 @@
     <h2 id="inputs-heading">Information used</h2>
     <dl class="facts">
       <dt>Class attendance</dt><dd>{{ "%.1f"|format(a.attendance_pct) }}%</dd>
-      <dt>Assignment completion</dt><dd>{{ "%.1f"|format(a.assignment_completion_pct) }}%</dd>
+      <dt>Assignment completion</dt><dd>{{ "%.1f"|format(a.assignment_completion_pct) }}%{% if "assignment_completion_pct" in model_status().unused_features %} <span class="muted small">(saved, not used by the current model)</span>{% endif %}</dd>
       <dt>Previous CGPA</dt>
       <dd>{% if a.previous_cgpa is not none %}{{ a.previous_cgpa }}{% elif a.cgpa_unavailable %}Not available{% else %}Not provided{% endif %}</dd>
       <dt>Financial capability</dt><dd>{{ a.financial_capability|capitalize if a.financial_capability else "Not provided" }}</dd>

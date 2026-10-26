@@ -66,15 +66,15 @@
 </section>
 
 <section id="about" class="section">
-  <div class="container">
-    <div class="about-intro">
+  <div class="wrap">
+    <div class="mb-10 grid max-w-xl gap-4">
       <div>
         <p class="eyebrow">About</p>
         <h2>A gentle early warning for your semester.</h2>
       </div>
       <p class="lead">Check in as often as you like. Each assessment is saved, so you can see how things change.</p>
     </div>
-    <div class="grid grid-3">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <article class="feature">
         <span class="feature-icon" aria-hidden="true">&#128200;</span>
         <h3>Quick risk assessment</h3>
@@ -95,11 +95,11 @@
 </section>
 
 <section id="how-it-works" class="section section-sky">
-  <div class="container">
+  <div class="wrap">
     <p class="eyebrow">How it works</p>
     <h2>Three simple steps</h2>
     <p class="section-intro">Repeatable any time during the semester.</p>
-    <div class="grid grid-3">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <article class="card glass">
         <span class="step-num">1</span>
         <h3>Enter your details</h3>
@@ -120,10 +120,10 @@
 </section>
 
 <section id="inputs" class="section">
-  <div class="container">
+  <div class="wrap">
     <p class="eyebrow">What you will enter</p>
     <h2>Some fields are required, others are optional</h2>
-    <div class="grid grid-2">
+    <div class="grid gap-5 sm:grid-cols-2">
       <article class="card">
         <h3>Required <span class="chip chip-req">Mandatory</span></h3>
         <ul class="check-list">
@@ -144,10 +144,10 @@
 </section>
 
 <section id="roles" class="section section-sky">
-  <div class="container">
+  <div class="wrap">
     <p class="eyebrow">Who uses {{ app_name }}</p>
     <h2>Each role sees only what it is allowed to see</h2>
-    <div class="grid grid-3">
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <article class="card glass"><h3>Student</h3><p>Views only their own assessments and history.</p></article>
       <article class="card glass"><h3>Academic adviser</h3><p>Views assessments of the students assigned to them.</p></article>
       <article class="card glass"><h3>Lecturer</h3><p>Views assessments of the students assigned to them.</p></article>
@@ -158,7 +158,7 @@
 </section>
 
 <section id="privacy" class="section">
-  <div class="container narrow">
+  <div class="wrap narrow">
     <p class="eyebrow">Privacy</p>
     <h2>Sharing and privacy</h2>
     <p>
@@ -172,7 +172,7 @@
 
 {% block footer %}
 <footer class="site-footer">
-  <div class="container footer-inner">
+  <div class="wrap footer-inner">
     {{ logo() }}
     <p>&copy; {{ now_year }} {{ app_name }} &middot; {{ institution }}</p>
   </div>
