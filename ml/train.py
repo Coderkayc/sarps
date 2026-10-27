@@ -71,8 +71,10 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
     unknown = [c for c in unused if c not in FEATURE_COLUMNS]
     if unknown:
         raise DatasetError(f"Unknown column(s) in --unused: {', '.join(unknown)}.")
+    paths = [csv_path] if isinstance(csv_path, (str, Path)) else list(csv_path)
     try:
-        raw = pd.read_csv(csv_path)
+        # Several files are stacked one under the other, so new rows can be added over time.
+        raw = pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
     except Exception as exc:
         raise DatasetError(f"Could not read the CSV file: {exc}")
 
@@ -179,7 +181,7 @@ def evaluate(pipeline, x_test, y_test):
 
 
 def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=False,
-                test_size=0.2, seed=42, cgpa_max=5.0, unused=()):
+                test_size=0.2, seed=42, cgpa_max=5.0, unused=(), synthetic=False):
     """Run the whole training procedure. Returns the saved bundle."""
     x, y, notes = load_and_check_dataset(csv_path, cgpa_max=cgpa_max, unused=unused)
 
@@ -204,7 +206,8 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
     final = build_pipeline(algorithm, balanced, seed)
     final.fit(x, y)
 
-    data_hash = hashlib.sha256(Path(csv_path).read_bytes()).hexdigest()[:8]
+    paths = [csv_path] if isinstance(csv_path, (str, Path)) else list(csv_path)
+    data_hash = hashlib.sha256(b"".join(Path(p).read_bytes() for p in paths)).hexdigest()[:8]
     stamp = datetime.now(timezone.utc)
     bundle = {
         "pipeline": final,
@@ -212,7 +215,9 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
         "unused_features": list(unused),
         "cgpa_max": cgpa_max,
         "positive_class": "not_at_risk",
-        "model_version": f"{algorithm}-{stamp:%Y%m%d-%H%M%S}-{data_hash}",
+        # "synthetic-" in the version makes every result page say it came from made-up data.
+        "model_version": f"{'synthetic-' if synthetic else ''}{algorithm}-{stamp:%Y%m%d-%H%M%S}-{data_hash}",
+        "synthetic": bool(synthetic),
         "trained_at": stamp.isoformat(),
         "algorithm": algorithm,
         "balanced": balanced,
@@ -237,7 +242,10 @@ def main(argv=None):
     from config import Config
 
     parser = argparse.ArgumentParser(description="Train the SARPS risk model from a real dataset.")
-    parser.add_argument("--data", required=True, help="Path to your dataset CSV (see ml/DATASET.md)")
+    parser.add_argument("--data", required=True, nargs="+",
+                        help="Path to your dataset CSV (see ml/DATASET.md). Give several to stack them.")
+    parser.add_argument("--synthetic", action="store_true",
+                        help="The data is made up. The site will then say so on every page.")
     parser.add_argument("--out", default=str(DEFAULT_OUT), help="Where to save the model")
     parser.add_argument("--algorithm", choices=["logistic", "forest"], default="logistic")
     parser.add_argument("--balanced", action="store_true",
@@ -251,7 +259,7 @@ def main(argv=None):
 
     try:
         bundle = train_model(args.data, args.out, args.algorithm, args.balanced,
-                             args.test_size, args.seed, args.cgpa_max, args.unused)
+                             args.test_size, args.seed, args.cgpa_max, args.unused, args.synthetic)
     except DatasetError as exc:
         print(f"\nDataset problem: {exc}", file=sys.stderr)
         return 1

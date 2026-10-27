@@ -18,6 +18,9 @@
     </div>
     <p class="gauge-scale"><span>0%</span><span>50% threshold</span><span>100%</span></p>
 
+    {% if a.model_version.startswith("synthetic") %}
+    <p class="notice notice-risk"><strong>Demo result.</strong> This number came from a model trained on made-up students. It is not evidence about you.</p>
+    {% endif %}
     <p class="classification">Classification: {{ risk_chip(a.risk_label) }}</p>
     <p class="muted small">
       Above 50% is NOT AT RISK. 50% or below is AT RISK.

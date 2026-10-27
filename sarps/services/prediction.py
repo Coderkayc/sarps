@@ -40,7 +40,10 @@ class PredictionService:
         self._lock = threading.Lock()
 
     def init_app(self, app):
-        self._path = Path(app.config["MODEL_PATH"])
+        path = Path(app.config["MODEL_PATH"])
+        if not path.is_absolute():  # a relative path in .env means "inside the project folder"
+            path = Path(app.root_path).parent / path
+        self._path = path
         self._cgpa_max = app.config.get("CGPA_MAX")
         app.extensions["prediction"] = self
 
@@ -91,6 +94,8 @@ class PredictionService:
             "trained_at": self._bundle.get("trained_at"),
             "n_rows": self._bundle.get("n_rows"),
             "unused_features": list(self._bundle.get("unused_features", [])),
+            # True when the model was trained on made-up data. The site then says so on every page.
+            "synthetic": bool(self._bundle.get("synthetic", False)),
             "metrics": self._bundle.get("metrics"),
         }
 

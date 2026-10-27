@@ -68,6 +68,10 @@
   </header>
   {% endblock %}
 
+  {% if model_status().synthetic %}
+  <div class="wrap flashes"><div class="flash flash-error" role="alert"><strong>DEMO MODEL.</strong> Predictions on this site come from a model trained on made-up (synthetic) students, not real ones. Treat every result as a demonstration only.</div></div>
+  {% endif %}
+
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="wrap flashes">

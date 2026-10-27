@@ -17,14 +17,14 @@
     <section class="card" aria-labelledby="model-heading">
       <h2 id="model-heading">Prediction model</h2>
       {% if model.available %}
-        <p><span class="chip chip-ok">Installed</span> Version <code>{{ model.version }}</code></p>
+        <p><span class="chip chip-ok">Installed</span>{% if model.synthetic %} <span class="chip chip-risk">Synthetic demo model</span>{% endif %} Version <code>{{ model.version }}</code></p>
         <dl class="facts">
           <dt>Trained at</dt><dd>{{ model.trained_at or "unknown" }}</dd>
           <dt>Rows used</dt><dd>{{ model.n_rows or "unknown" }}</dd>
           {% if model.unused_features %}<dt>Inputs not used</dt><dd>{{ model.unused_features|join(", ") }}</dd>{% endif %}
           {% if model.metrics %}
           <dt>Accuracy (held-out test)</dt><dd>{{ model.metrics.accuracy }}</dd>
-          <dt>ROC AUC (held-out test)</dt><dd>{{ model.metrics.roc_auc }}</dd>
+          <dt>ROC AUC (held-out test)</dt><dd>{{ model.metrics.roc_auc if model.metrics.roc_auc is not none else "n/a" }}</dd>
           <dt>At Risk recall (held-out test)</dt><dd>{{ model.metrics.at_risk_recall }}</dd>
           {% endif %}
         </dl>

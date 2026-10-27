@@ -9,46 +9,37 @@
     "financial_impact",
     "previous_cgpa"
   ],
-  "unused_features": [
-    "assignment_submission_rate",
-    "ca_high_rate",
-    "ca_low_rate",
-    "financial_impact"
-  ],
+  "unused_features": [],
   "cgpa_max": 5.0,
   "positive_class": "not_at_risk",
-  "model_version": "logistic-20261026-191228-06b42b68",
-  "trained_at": "2026-10-26T19:12:28.134560+00:00",
+  "model_version": "synthetic-logistic-20261027-194731-73bd3790",
+  "synthetic": true,
+  "trained_at": "2026-10-27T19:47:31.024116+00:00",
   "algorithm": "logistic",
   "balanced": true,
-  "n_rows": 894,
+  "n_rows": 2000,
   "class_counts": {
-    "at_risk": 235,
-    "not_at_risk": 659
+    "at_risk": 597,
+    "not_at_risk": 1403
   },
   "metrics": {
-    "test_rows": 179,
-    "accuracy": 0.7151,
-    "roc_auc": 0.7614,
-    "at_risk_recall": 0.6809,
-    "at_risk_precision": 0.4706,
-    "not_at_risk_recall": 0.7273,
-    "f1_not_at_risk": 0.7901,
+    "test_rows": 400,
+    "accuracy": 0.71,
+    "roc_auc": 0.7777,
+    "at_risk_recall": 0.7815,
+    "at_risk_precision": 0.5082,
+    "not_at_risk_recall": 0.6797,
+    "f1_not_at_risk": 0.7671,
     "confusion_matrix": {
-      "true_at_risk_predicted_at_risk": 32,
-      "true_at_risk_predicted_not_at_risk": 15,
-      "true_not_at_risk_predicted_at_risk": 36,
-      "true_not_at_risk_predicted_not_at_risk": 96
+      "true_at_risk_predicted_at_risk": 93,
+      "true_at_risk_predicted_not_at_risk": 26,
+      "true_not_at_risk_predicted_at_risk": 90,
+      "true_not_at_risk_predicted_not_at_risk": 191
     },
-    "cv_roc_auc_mean": 0.7226,
-    "cv_roc_auc_std": 0.0507,
+    "cv_roc_auc_mean": 0.7358,
+    "cv_roc_auc_std": 0.0241,
     "cv_folds": 5
   },
-  "data_notes": [
-    "'assignment_submission_rate' is not in this dataset. The model does not use it.",
-    "'ca_high_rate' is not in this dataset. The model does not use it.",
-    "'ca_low_rate' is not in this dataset. The model does not use it.",
-    "'financial_impact' is not in this dataset. The model does not use it."
-  ],
+  "data_notes": [],
   "sklearn_version": "1.9.1"
 }

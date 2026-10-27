@@ -70,6 +70,11 @@
       </fieldset>
 
       <fieldset>
+        <legend>Your goal <span class="chip chip-opt">Optional</span></legend>
+        {{ field(form.target_cgpa, attrs={"type": "number", "step": "0.01", "min": 0, "max": config.CGPA_MAX, "inputmode": "decimal"}, hint="Your advice will be about reaching this, not just about avoiding risk.", optional=True) }}
+      </fieldset>
+
+      <fieldset>
         <legend>Sharing agreement <span class="chip chip-req">Required</span></legend>
         {{ checkbox(form.consent) }}
       </fieldset>

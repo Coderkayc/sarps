@@ -25,8 +25,48 @@ The "Sign in with Google" and "Sign up with Google" buttons need a Google OAuth 
 
 How it behaves: Google only proves the person's verified email. An existing account with that email is signed in. A new person is asked once for their matriculation number and department, and gets a student account. Staff accounts are still created by the administrator. The computer running SARPS needs internet access to reach Google. Without the two keys, the button explains that Google sign-in is not set up.
 
+## Optional: demo mode with the synthetic-data model
+
+The standalone `sarps_model` package (Random Forest trained on 500 MADE-UP students, using only six translated
+inputs) can be switched on as a second demo. The default model is described under "About the included model".
+While a synthetic model is on, every page shows a red "DEMO MODEL" banner, every result says
+"Demo result", and the Assumptions page says the model was trained on made-up students.
+
+1. In Git Bash, with `.venv` active, from the project folder (use the folder that holds the `.pkl` files):
+   `python -m ml.import_external_model "C:/Users/hp/Downloads/sarps_model/sarps_model/model"`
+2. Add this line to `.env`, save, and restart `python app.py`:
+   `MODEL_PATH=ml/models/sarps_demo_model.joblib`
+3. To go back to the real model, delete that line from `.env` and restart.
+
+Its accuracy (97%) is measured on the same made-up data, so it proves the code works, not that the model predicts
+real students. Some answers are translated into that model's own number formats; every rule is written at the top
+of `ml/external_adapter.py`. The demo model gives no per-factor explanation (that needs SHAP, which is not installed).
+
 ## About the included model
-The app never invents predictions. It ships with a model trained on a real public dataset (Bangladesh, 894 students) so you can demonstrate it. That model has real limits (no assignment data, a different country, modest accuracy), listed in `ml/DATASET.md`. Replace it with your own university's data when you have it: `python -m ml.train --data your.csv`. Without any model file, the form is disabled and the server refuses submissions.
+The app ships with two trained models. Both are honest about what they are.
+
+| File | Trained on | Uses |
+|---|---|---|
+| `ml/models/sarps_model.joblib` (**default**) | 2,000 SYNTHETIC (made-up) students from `ml/make_synthetic.py` | **All 8 inputs** |
+| `ml/models/sarps_model_iubat.joblib` | 894 REAL students (IUBAT, Bangladesh) | 4 of the 8 inputs (the dataset has no assignment, test/CA or financial-impact data) |
+
+The default is synthetic so that every question on the form counts. While it is active, every page shows a red
+"DEMO MODEL" banner and every result says "Demo result". Its scores measure how well the model learned the
+invented patterns, not how well it predicts real students. All invented assumptions are listed in `ml/SYNTHETIC.md`.
+
+To use the real IUBAT model instead, add this line to `.env` and restart: `MODEL_PATH=ml/models/sarps_model_iubat.joblib`.
+
+### Retrain later, as often as you like
+Training is one command and the app picks up the new model by itself, with no code changes:
+```bash
+python -m ml.train --data ml/data/real_students.csv --balanced
+```
+- Collect real, labelled students (same columns as `ml/data/real_students_template.csv`; see `ml/DATASET.md`) and keep adding rows to that file. Retrain whenever you have more.
+- To train on real rows only, run the command above (no `--synthetic`). The banner disappears automatically, because the model is no longer synthetic.
+- To bootstrap while you only have a few real rows, you may stack files: `--data ml/data/real_students.csv ml/data/synthetic_training.csv --synthetic`. Keep `--synthetic` while any made-up rows are included.
+- Do NOT train on the app's own predictions: they are not real outcomes, and the model would just learn itself. Only add students whose real outcome (At Risk or not) is known.
+
+Without any model file, the form is disabled and the server refuses submissions.
 
 ## 1. Install
 ```bash

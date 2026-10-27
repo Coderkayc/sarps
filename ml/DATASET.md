@@ -36,8 +36,11 @@ Options: `--algorithm forest`, `--balanced` (if At Risk students are rare), `--c
 
 The script prints accuracy, ROC AUC, and especially **at_risk_recall** (the share of truly At Risk students the model catches). It saves the model to `ml/models/sarps_model.joblib` plus a `.json` report you can cite. The CGPA scale in the dataset must match `CGPA_MAX` in `.env`, otherwise the app refuses the model.
 
-## The model currently included (read before you present it)
-`ml/models/sarps_model.joblib` was trained on the public IUBAT (Bangladesh) survey, 894 CS students, using `ml/prepare_iubat.py`:
+## The models currently included (read before you present them)
+The default `ml/models/sarps_model.joblib` is trained on SYNTHETIC students (see `ml/SYNTHETIC.md`) so that every input is used.
+The section below describes the real-data model, now saved as `ml/models/sarps_model_iubat.joblib`.
+
+`ml/models/sarps_model_iubat.joblib` was trained on the public IUBAT (Bangladesh) survey, 894 CS students, using `ml/prepare_iubat.py`:
 ```bash
 python -m ml.prepare_iubat --raw IUBAT_Student_Performance_Dataset.csv --out ml/data/iubat_training.csv
 python -m ml.train --data ml/data/iubat_training.csv --algorithm logistic --balanced \
