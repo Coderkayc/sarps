@@ -74,6 +74,19 @@ class StudentRegistrationForm(FlaskForm):
             raise ValidationError("This matriculation number is already registered.")
 
 
+class GoogleProfileForm(FlaskForm):
+    """Asked once, after a first-time Google sign-in, for what Google cannot tell us."""
+    full_name = StringField("Full name", filters=[_strip],
+                            validators=[DataRequired(), Length(min=2, max=150)])
+    matric_number = StringField("Matriculation number", filters=[_clean_matric],
+                                validators=[DataRequired(), Length(min=3, max=40)])
+    department_id = SelectField("Department", coerce=int)
+
+    def validate_matric_number(self, field):
+        if db.session.scalar(select(User.id).where(User.matric_number == field.data)):
+            raise ValidationError("This matriculation number is already registered.")
+
+
 # ---------- the assessment ----------
 def _coerce_level(value):
     """'' or None -> None (nothing chosen yet). Anything else must be a whole number."""

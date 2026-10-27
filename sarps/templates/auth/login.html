@@ -1,9 +1,10 @@
 {% extends "layout_auth.html" %}
-{% from "_macros.html" import field, password_field, csrf %}
+{% from "_macros.html" import field, password_field, csrf, google_button %}
 {% block title %}Sign in | {{ app_name }}{% endblock %}
 {% block auth_title %}Welcome back{% endblock %}
 {% block auth_subtitle %}Sign in to your {{ app_name }} account.{% endblock %}
 {% block auth_body %}
+{{ google_button("Sign in with Google") }}
 <form method="post" novalidate>
   {{ csrf() }}
   {{ field(form.email, attrs={"type": "email", "autocomplete": "username", "autofocus": true}) }}

@@ -11,14 +11,11 @@ def test_landing_page_loads(client):
     assert "SARPS" in html and "Student Academic Risk Prediction System" in html
 
 
-def test_landing_page_is_honest_when_no_model(client):
-    html = client.get("/").get_data(as_text=True)
-    assert "has not been installed yet" in html
-
-
-def test_landing_page_reports_model_when_installed(model_client):
-    html = model_client.get("/").get_data(as_text=True)
-    assert "model is installed" in html
+def test_landing_page_has_no_status_lines_under_the_buttons(client, model_client):
+    for c in (client, model_client):
+        html = c.get("/").get_data(as_text=True)
+        assert "model is installed" not in html and "has not been installed yet" not in html
+        assert "50% or below" not in html.split('id="about"')[0]
 
 
 def test_static_files_are_served(client):

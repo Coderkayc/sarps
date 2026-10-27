@@ -12,7 +12,7 @@ from flask_wtf.csrf import CSRFError
 from config import Config
 from sarps.cli import register_commands
 from sarps.constants import STAFF_ROLES, Role
-from sarps.extensions import csrf, db, login_manager
+from sarps.extensions import csrf, db, login_manager, oauth
 from sarps.services.prediction import PredictionService
 
 
@@ -23,6 +23,15 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    oauth.init_app(app)
+    if app.config.get("GOOGLE_CLIENT_ID") and app.config.get("GOOGLE_CLIENT_SECRET"):
+        oauth.register(
+            name="google",
+            client_id=app.config["GOOGLE_CLIENT_ID"],
+            client_secret=app.config["GOOGLE_CLIENT_SECRET"],
+            server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+            client_kwargs={"scope": "openid email profile"},
+        )
     PredictionService().init_app(app)
 
     from sarps import models  # noqa: F401  (makes sure the tables are registered)

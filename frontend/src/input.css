@@ -168,6 +168,11 @@
   .auth-links p { @apply mb-1.5; }
   .auth-links a { @apply font-bold; }
 
+  /* Google button and the "or" divider */
+  .btn-google { @apply flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-line bg-white px-4 font-bold text-ink no-underline shadow-sm transition hover:-translate-y-0.5 hover:bg-heaven/40; }
+  .divider { @apply my-5 mb-5 flex items-center gap-3 text-[0.85rem] text-muted; }
+  .divider::before, .divider::after { content: ""; @apply h-px flex-1 bg-line; }
+
   /* Cards, chips, notices */
   .card { @apply rounded-2xl border border-white/75 bg-shine/80 p-6 shadow-glass backdrop-blur-md; }
   .card h3 { @apply mb-1.5; }

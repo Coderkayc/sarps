@@ -15,6 +15,16 @@ npm run build      # or: npm run watch
 ```
 Source styles live in `frontend/src/input.css`.
 
+## Google sign-in
+The "Sign in with Google" and "Sign up with Google" buttons need a Google OAuth client. Only you can create it (it is tied to your Google account):
+1. Go to https://console.cloud.google.com/ and create a project.
+2. **APIs & Services > OAuth consent screen**: choose External, fill in the app name and your email. While the app is in "Testing", add the Google accounts that should be allowed to sign in under **Test users**.
+3. **APIs & Services > Credentials > Create credentials > OAuth client ID > Web application**.
+4. Under **Authorised redirect URIs** add exactly: `http://127.0.0.1:5000/auth/google/callback` (and `http://localhost:5000/auth/google/callback` if you also browse by `localhost`). The address must match the one in your browser's address bar.
+5. Copy the Client ID and Client secret into `.env` as `GOOGLE_CLIENT_ID=` and `GOOGLE_CLIENT_SECRET=`, save, and restart `python app.py`.
+
+How it behaves: Google only proves the person's verified email. An existing account with that email is signed in. A new person is asked once for their matriculation number and department, and gets a student account. Staff accounts are still created by the administrator. The computer running SARPS needs internet access to reach Google. Without the two keys, the button explains that Google sign-in is not set up.
+
 ## About the included model
 The app never invents predictions. It ships with a model trained on a real public dataset (Bangladesh, 894 students) so you can demonstrate it. That model has real limits (no assignment data, a different country, modest accuracy), listed in `ml/DATASET.md`. Replace it with your own university's data when you have it: `python -m ml.train --data your.csv`. Without any model file, the form is disabled and the server refuses submissions.
 

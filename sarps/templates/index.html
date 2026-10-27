@@ -28,7 +28,6 @@
 {% endblock %}
 
 {% block content %}
-{% set model_ready = model_status().available %}
 <section class="landing-hero">
   <span class="blob blob-1" aria-hidden="true"></span>
   <span class="blob blob-2" aria-hidden="true"></span>
@@ -48,21 +47,6 @@
         <a class="btn hero-secondary" href="{{ url_for('auth.login') }}">Sign in</a>
       {% endif %}
     </div>
-    <p class="hero-rule">
-      <span class="chip chip-risk">At Risk</span> 50% or below
-      <span aria-hidden="true">&middot;</span>
-      <span class="chip chip-ok">Not at Risk</span> above 50%
-    </p>
-    <p class="status-note">
-      <span class="status-dot {{ 'status-dot-ok' if model_ready else '' }}" aria-hidden="true"></span>
-      <span>
-        {% if model_ready %}
-          The prediction model is installed and assessments are open.
-        {% else %}
-          The prediction model has not been installed yet, so assessments cannot be submitted.
-        {% endif %}
-      </span>
-    </p>
   </div>
 </section>
 

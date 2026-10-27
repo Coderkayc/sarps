@@ -59,6 +59,11 @@ class Config:
     CURRENT_SESSION = os.environ.get("CURRENT_SESSION", "2026/2027")
     CURRENT_SEMESTER = int(os.environ.get("CURRENT_SEMESTER", "1"))
 
+    # Google sign-in. Create an OAuth client in Google Cloud Console (see README) and put
+    # its ID and secret in .env. Without them the Google button explains it is not set up.
+    GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID") or None
+    GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET") or None
+
     MIN_PASSWORD_LENGTH = 8
     PER_PAGE = 20
 
@@ -72,5 +77,7 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get("TEST_DATABASE_URL", "sqlite://")
     SQLALCHEMY_ENGINE_OPTIONS = {}
     WTF_CSRF_ENABLED = False
+    GOOGLE_CLIENT_ID = None
+    GOOGLE_CLIENT_SECRET = None
     SESSION_COOKIE_SECURE = False
     MODEL_PATH = str(BASE_DIR / "tests" / "no-such-model.joblib")

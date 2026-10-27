@@ -35,6 +35,8 @@ class User(UserMixin, db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey("departments.id"), nullable=True)
     matric_number = db.Column(db.String(40), unique=True, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
+    # Google's permanent id for this person, set the first time they sign in with Google.
+    google_sub = db.Column(db.String(64), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     department = db.relationship("Department")
