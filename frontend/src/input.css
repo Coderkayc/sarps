@@ -3,8 +3,11 @@
    Layout and spacing are Tailwind utility classes in the templates.
    Repeated pieces (buttons, cards, form fields, chips) are components below. */
 @import "tailwindcss";
+/* Tailwind CSS v4 directive; suppress generic Stylelint unknown-at-rule warning. */
+/* stylelint-disable at-rule-no-unknown */
 @source "../../sarps/templates";
 @source "../../sarps/static/js";
+/* stylelint-enable at-rule-no-unknown */
 
 @font-face { font-family: "Plus Jakarta Sans"; font-weight: 400; font-style: normal; font-display: swap; src: url("../vendor/fonts/plus-jakarta-sans-latin-400-normal.woff2") format("woff2"); }
 @font-face { font-family: "Plus Jakarta Sans"; font-weight: 500; font-style: normal; font-display: swap; src: url("../vendor/fonts/plus-jakarta-sans-latin-500-normal.woff2") format("woff2"); }

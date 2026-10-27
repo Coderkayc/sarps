@@ -8,6 +8,7 @@ from flask import (Blueprint, current_app, flash, redirect, render_template, req
                    url_for)
 from flask_login import current_user, login_user, logout_user
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from sarps.constants import Role
 from sarps.extensions import db, oauth
@@ -39,7 +40,14 @@ def register():
                        matric_number=form.matric_number.data)
         student.set_password(form.password.data)
         db.session.add(student)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # Usually a double click: the first request already created this account.
+            db.session.rollback()
+            flash("An account with this email or matriculation number already exists. "
+                  "Please sign in.", "error")
+            return redirect(url_for("auth.login"))
         flash("Your account has been created. Please sign in.", "success")
         return redirect(url_for("auth.login"))
     return render_template("auth/register.html", form=form, no_departments=False)
@@ -186,7 +194,14 @@ def google_profile():
         # No password is ever used for this account, so it gets a long random one nobody knows.
         student.set_password(secrets.token_urlsafe(32))
         db.session.add(student)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            session.pop("google_pending", None)
+            flash("An account with this email or matriculation number already exists. "
+                  "Please sign in.", "error")
+            return redirect(url_for("auth.login"))
         session.pop("google_pending", None)
         login_user(student)
         flash("Your account has been created.", "success")
