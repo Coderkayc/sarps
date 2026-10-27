@@ -32,7 +32,7 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from ml.features import FEATURE_COLUMNS, LABEL_COLUMN, financial_to_number
+from ml.features import FEATURE_COLUMNS, LABEL_COLUMN
 
 import joblib
 import warnings
@@ -49,11 +49,22 @@ class DatasetError(Exception):
     """The dataset has a problem the user must fix. The message says what."""
 
 
+# Allowed range for each model input. Anything outside is a data mistake, so we stop
+# instead of guessing. Levels must also be whole numbers.
+LEVEL_RANGES = {
+    "attendance_level": (0, 6), "study_hours_level": (0, 9),
+    "financial_comfort": (1, 5), "financial_impact": (1, 5),
+}
+RATE_COLUMNS = ["assignment_submission_rate", "ca_high_rate", "ca_low_rate"]
+# Inputs that must be present in every training row (unless listed in --unused).
+REQUIRED_INPUTS = ["attendance_level"]
+
+
 def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
     """Read the CSV, validate it, and return (features DataFrame, labels Series, notes).
 
     `unused` lists input columns the dataset does not really contain (for example
-    assignment completion). They are blanked out so the model cannot learn from
+    assignment submission). They are blanked out so the model cannot learn from
     them, and they are not required to be filled in.
     """
     unused = list(unused)
@@ -81,17 +92,12 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
         notes.append(f"'{col}' is not in this dataset. The model does not use it.")
 
     # Convert text to numbers. Anything unreadable becomes blank (NaN) and is reported.
-    for col in ["attendance_pct", "assignment_completion_pct", "previous_cgpa",
-                "study_hours_per_week", LABEL_COLUMN]:
+    for col in FEATURE_COLUMNS + [LABEL_COLUMN]:
         before = df[col].notna().sum()
         df[col] = pd.to_numeric(df[col], errors="coerce")
         lost = int(before - df[col].notna().sum())
         if lost:
             notes.append(f"{lost} unreadable value(s) in '{col}' were treated as blank.")
-    try:
-        df["financial_capability"] = df["financial_capability"].map(financial_to_number)
-    except ValueError as exc:
-        raise DatasetError(str(exc))
 
     # Labels must be exactly 0 or 1.
     unlabeled = int(df[LABEL_COLUMN].isna().sum())
@@ -101,25 +107,27 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
     if not df[LABEL_COLUMN].isin([0, 1]).all():
         raise DatasetError(f"'{LABEL_COLUMN}' must contain only 0 or 1 (1 = Not at Risk, 0 = At Risk).")
 
-    # The two required inputs must be present.
-    required = [c for c in ["attendance_pct", "assignment_completion_pct"] if c not in unused]
-    required_blank = df[required].isna().any(axis=1)
+    # The required inputs must be present.
+    required = [c for c in REQUIRED_INPUTS if c not in unused]
+    required_blank = df[required].isna().any(axis=1) if required else pd.Series(False, index=df.index)
     if required_blank.any():
         notes.append(f"Dropped {int(required_blank.sum())} row(s) missing a required input ({', '.join(required)}).")
         df = df[~required_blank]
 
     # Impossible values mean the data has a mistake. Stop instead of guessing.
     problems = []
-    for col in required:
+    for col, (low, high) in LEVEL_RANGES.items():
+        values = df[col].dropna()
+        bad = int(((values < low) | (values > high) | (values != values.round())).sum())
+        if bad:
+            problems.append(f"{bad} row(s) have '{col}' outside the whole numbers {low}-{high}")
+    for col in RATE_COLUMNS:
         bad = int(((df[col] < 0) | (df[col] > 100)).sum())
         if bad:
             problems.append(f"{bad} row(s) have '{col}' outside 0-100")
     bad = int(((df["previous_cgpa"] < 0) | (df["previous_cgpa"] > cgpa_max)).sum())
     if bad:
         problems.append(f"{bad} row(s) have 'previous_cgpa' outside 0-{cgpa_max}")
-    bad = int(((df["study_hours_per_week"] < 0) | (df["study_hours_per_week"] > 100)).sum())
-    if bad:
-        problems.append(f"{bad} row(s) have 'study_hours_per_week' outside 0-100")
     if problems:
         raise DatasetError("Impossible values found: " + "; ".join(problems) + ". Fix the dataset and try again.")
 
@@ -238,7 +246,7 @@ def main(argv=None):
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--cgpa-max", type=float, default=Config.CGPA_MAX)
     parser.add_argument("--unused", nargs="*", default=[], metavar="COLUMN",
-                        help="Input columns missing from your dataset, e.g. assignment_completion_pct")
+                        help="Input columns missing from your dataset, e.g. assignment_submission_rate")
     args = parser.parse_args(argv)
 
     try:

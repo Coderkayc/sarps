@@ -5,14 +5,17 @@ from sqlalchemy import select
 from sarps.constants import Role
 from sarps.extensions import db
 from sarps.models import Department, User
+from sarps.schema import upgrade_schema
 from sarps.security import password_problems
 
 
 def register_commands(app):
     @app.cli.command("init-db")
     def init_db():
-        """Create all database tables (safe to run again; it never deletes data)."""
+        """Create missing tables and add any new columns (safe to run again; it never deletes data)."""
         db.create_all()
+        for line in upgrade_schema():
+            click.echo(f"Upgrade: {line}")
         click.echo("Database tables are ready.")
 
     @app.cli.command("add-department")

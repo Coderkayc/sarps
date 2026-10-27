@@ -13,6 +13,7 @@
       <a href="#inputs">What you enter</a>
       <a href="#roles">Who uses it</a>
       <a href="#privacy">Privacy</a>
+      <a href="{{ url_for('main.assumptions') }}">Assumptions</a>
     </div>
     <div class="landing-actions">
       {% if current_user.is_authenticated %}
@@ -78,7 +79,7 @@
       <article class="feature">
         <span class="feature-icon" aria-hidden="true">&#128200;</span>
         <h3>Quick risk assessment</h3>
-        <p>Answer a short form about attendance, assignments and study habits, and see your result in seconds.</p>
+        <p>Answer a short form about attendance, assignments, tests, study habits and finances, and see your result in seconds.</p>
       </article>
       <article class="feature">
         <span class="feature-icon" aria-hidden="true">&#128339;</span>
@@ -103,12 +104,12 @@
       <article class="card glass">
         <span class="step-num">1</span>
         <h3>Enter your details</h3>
-        <p>Fill in a short form about your attendance, assignments and study habits.</p>
+        <p>Answer a short form about attendance, assignments, tests, study habits and finances.</p>
       </article>
       <article class="card glass">
         <span class="step-num">2</span>
         <h3>Get an assessment</h3>
-        <p>A machine-learning model estimates the probability that you are Not at Risk and classifies you as At Risk or Not at Risk.</p>
+        <p>A machine-learning model estimates the probability that you are Not at Risk and labels you AT RISK or NOT AT RISK.</p>
       </article>
       <article class="card glass">
         <span class="step-num">3</span>
@@ -121,24 +122,15 @@
 
 <section id="inputs" class="section">
   <div class="wrap">
-    <p class="eyebrow">What you will enter</p>
-    <h2>Some fields are required, others are optional</h2>
-    <div class="grid gap-5 sm:grid-cols-2">
-      <article class="card">
-        <h3>Required <span class="chip chip-req">Mandatory</span></h3>
-        <ul class="check-list">
-          <li>Class attendance</li>
-          <li>Assignment completion</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Optional <span class="chip chip-opt">Optional</span></h3>
-        <ul class="check-list">
-          <li>Previous CGPA (you can mark it as unavailable)</li>
-          <li>Financial capability</li>
-          <li>Average study hours per week</li>
-        </ul>
-      </article>
+    <p class="eyebrow">What you will answer</p>
+    <h2>Five short sections, plus your CGPA if you have one</h2>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <article class="card"><h3>Class attendance</h3><p>Pick the option that best describes how often you attend.</p></article>
+      <article class="card"><h3>Assignment submission</h3><p>How many were assigned, and how many you have submitted.</p></article>
+      <article class="card"><h3>Tests and CAs</h3><p>How many you have done and how you felt you did. Your honest impression is enough.</p></article>
+      <article class="card"><h3>Study hours per week</h3><p>Pick your typical weekly study time outside class.</p></article>
+      <article class="card"><h3>Financial situation</h3><p>How comfortable you are, and how often money gets in the way.</p></article>
+      <article class="card"><h3>CGPA</h3><p>Enter it if you have one. If you do not, just say so: it is never counted as zero.</p></article>
     </div>
   </div>
 </section>

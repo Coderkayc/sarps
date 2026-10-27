@@ -6,11 +6,17 @@ from sarps.models import Assessment, Department, StaffAssignment, User
 PASSWORD = "Password123!"
 
 VALID_ASSESSMENT = {
-    "attendance_pct": "80",
-    "assignment_completion_pct": "70",
+    "attendance_level": "4",
+    "assignments_assigned": "5",
+    "assignments_submitted": "4",
+    "tests_done": "4",
+    "tests_high": "1",
+    "tests_low": "1",
+    "study_hours_level": "3",
+    "financial_comfort": "3",
+    "financial_impact": "2",
+    "has_cgpa": "yes",
     "previous_cgpa": "3.5",
-    "financial_capability": "medium",
-    "study_hours_per_week": "12",
     "consent": "y",
 }
 
@@ -45,7 +51,9 @@ def assign(staff, student):
 def make_assessment(student, prob=72.5, label=None):
     label = label or ("Not at Risk" if prob > 50 else "At Risk")
     assessment = Assessment(
-        student_id=student.id, attendance_pct=80, assignment_completion_pct=70,
+        student_id=student.id, attendance_level=4, assignments_assigned=5, assignments_submitted=4,
+        tests_done=4, tests_high=1, tests_low=1, study_hours_level=3, financial_comfort=3, financial_impact=2,
+        previous_cgpa=3.5,
         prob_not_at_risk=prob, risk_label=label, is_flagged=(label == "At Risk"),
         model_version="test", consent_given=True, consent_version="v1")
     db.session.add(assessment)

@@ -97,6 +97,42 @@ class PredictionService:
     def is_available(self):
         return self.status()["available"]
 
+    def explain(self, features):
+        """Which inputs pushed this student's score up or down, versus the average training student.
+
+        Only works for the logistic model (every input has one fixed weight). Returns a list of
+        dicts sorted by strength, or an empty list if the model type cannot be explained this way.
+        Each contribution is in "log-odds": positive raises the Not at Risk score, negative lowers it.
+        """
+        self._refresh()
+        if self._bundle is None:
+            raise ModelNotAvailable("No trained model is available.")
+        features = dict(features)
+        for name in self._bundle.get("unused_features", []):
+            features[name] = np.nan
+        pipeline = self._bundle["pipeline"]
+        steps = getattr(pipeline, "named_steps", {})
+        imputer, scaler, model = steps.get("impute"), steps.get("scale"), steps.get("model")
+        if imputer is None or scaler is None or not hasattr(model, "coef_"):
+            return []
+        columns = list(self._bundle["feature_columns"])
+        frame = to_frame([features])
+        kept = [c for c, stat in zip(columns, imputer.statistics_) if not np.isnan(stat)]
+        scaled = scaler.transform(imputer.transform(frame))[0]
+        weights = model.coef_[0]
+        result = []
+        for index, name in enumerate(kept):
+            if np.isnan(frame.iloc[0][name]):
+                continue  # the student left this blank; it says nothing about them
+            result.append({
+                "name": name,
+                "value": float(frame.iloc[0][name]),
+                "typical": float(scaler.mean_[index]),
+                "contribution": float(weights[index] * scaled[index]),
+            })
+        result.sort(key=lambda item: abs(item["contribution"]), reverse=True)
+        return result
+
     def predict(self, features):
         """`features` is a dict from ml.features.features_from_inputs."""
         self._refresh()

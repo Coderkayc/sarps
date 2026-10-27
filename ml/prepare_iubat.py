@@ -9,22 +9,30 @@ Every choice below is a judgement call. State them in your project report.
 
   not_at_risk                 1 if the student answered "No" to "Did you ever fall in
                               probation?", 0 if "Yes". Probation is a real academic outcome.
-  attendance_pct              "Average attendance on class (Percentage)", used as is (0-100).
-  assignment_completion_pct   NOT IN THIS DATASET. Left blank. Train with
-                              --unused assignment_completion_pct so the model ignores it.
+  attendance_level            "Average attendance on class (Percentage)" put into the same 7 bands
+                              as the form dropdown (0, 1-20, 21-40, 41-60, 61-80, 81-95, 96-100).
+  study_hours_level           daily study hours x 7, put into the same 10 bands as the form.
+                              Blank if daily hours are above 16 (typing errors such as 30).
+  financial_comfort           PROXY from monthly family income (BDT): the sample is split into five
+                              equal groups, lowest income = 1 (severely struggling) up to
+                              highest = 5 (very comfortable). Income of 0 = blank.
   previous_cgpa               "current CGPA" (the student's cumulative GPA at survey time, which
-                              is what a student would enter as their previous CGPA).
-                              Blank if 0 (first-semester students have none) or above the
-                              dataset's 4.0 scale (typing errors such as 310). Multiplied by
-                              (cgpa_max / 4.0) to move it to your university's scale.
-  financial_capability        PROXY from monthly family income (BDT): lowest third = low,
-                              middle third = medium, top third = high. Income of 0 = blank.
-  study_hours_per_week        daily study hours x 7. Blank if daily hours are above 16.
+                              is what a student would enter as their CGPA). Blank if 0 (first-semester
+                              students have none) or above the dataset's 4.0 scale (typing errors such
+                              as 310). Multiplied by (cgpa_max / 4.0) to move it to your scale.
+  assignment_submission_rate,
+  ca_high_rate, ca_low_rate,
+  financial_impact            NOT IN THIS DATASET. Left blank. Train with
+                              --unused assignment_submission_rate ca_high_rate ca_low_rate financial_impact
+                              so the model ignores them.
 """
 import argparse
 import sys
 
 import pandas as pd
+
+from ml.features import (FEATURE_COLUMNS, attendance_level_from_pct,
+                         study_level_from_weekly_hours)
 
 SOURCE_CGPA_MAX = 4.0
 
@@ -44,28 +52,28 @@ def prepare(raw_csv, cgpa_max=5.0):
     out = pd.DataFrame(index=raw.index)
     answer = raw[prob].astype(str).str.strip().str.lower()
     out["not_at_risk"] = answer.map({"no": 1, "yes": 0})
-    out["attendance_pct"] = pd.to_numeric(raw[att], errors="coerce")
-    out["assignment_completion_pct"] = float("nan")
+    out["attendance_level"] = pd.to_numeric(raw[att], errors="coerce").map(attendance_level_from_pct)
+
+    daily = pd.to_numeric(raw[hrs], errors="coerce")
+    daily = daily.where((daily >= 0) & (daily <= 16))
+    out["study_hours_level"] = (daily * 7).map(study_level_from_weekly_hours)
+
+    income = pd.to_numeric(raw[inc], errors="coerce")
+    income = income.where(income > 0)
+    groups = pd.qcut(income.dropna().rank(method="first"), 5, labels=[1, 2, 3, 4, 5])
+    out["financial_comfort"] = groups.astype(float).reindex(raw.index)
+    edges = income.quantile([0.2, 0.4, 0.6, 0.8]).tolist()
 
     cgpa = pd.to_numeric(raw[cg], errors="coerce")
     cgpa = cgpa.where((cgpa > 0) & (cgpa <= SOURCE_CGPA_MAX))
     out["previous_cgpa"] = (cgpa * (cgpa_max / SOURCE_CGPA_MAX)).round(2)
 
-    income = pd.to_numeric(raw[inc], errors="coerce")
-    income = income.where(income > 0)
-    low, high = income.quantile([1 / 3, 2 / 3])
-    out["financial_capability"] = pd.cut(income, [-float("inf"), low, high, float("inf")],
-                                         labels=["low", "medium", "high"]).astype("object")
+    for column in ("assignment_submission_rate", "ca_high_rate", "ca_low_rate", "financial_impact"):
+        out[column] = float("nan")
 
-    daily = pd.to_numeric(raw[hrs], errors="coerce")
-    daily = daily.where((daily >= 0) & (daily <= 16))
-    out["study_hours_per_week"] = daily * 7
-
-    out = out.dropna(subset=["not_at_risk", "attendance_pct"])
+    out = out.dropna(subset=["not_at_risk", "attendance_level"])
     out["not_at_risk"] = out["not_at_risk"].astype(int)
-    columns = ["attendance_pct", "assignment_completion_pct", "previous_cgpa",
-               "financial_capability", "study_hours_per_week", "not_at_risk"]
-    return out[columns], {"income_low_cut": float(low), "income_high_cut": float(high)}
+    return out[FEATURE_COLUMNS + ["not_at_risk"]], {"income_quintile_edges": edges}
 
 
 def main(argv=None):
@@ -79,7 +87,7 @@ def main(argv=None):
     print(f"Wrote {len(data)} rows to {args.out}")
     print(f"Not at Risk (no probation): {int(data.not_at_risk.sum())}, At Risk (probation): {int((data.not_at_risk == 0).sum())}")
     print(f"Blank counts: {data.isna().sum().to_dict()}")
-    print(f"Income cut-offs used for low/medium/high: {cuts}")
+    print(f"Income cut-offs used for the five comfort groups: {cuts}")
     return 0
 
 

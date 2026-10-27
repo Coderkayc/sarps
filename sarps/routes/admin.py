@@ -8,8 +8,8 @@ from sqlalchemy import func, select
 
 from sarps.constants import ASSIGNABLE_ROLES, ROLE_LABELS, Role
 from sarps.extensions import db
-from sarps.forms import AssignmentForm, CreateStaffForm, DepartmentForm
-from sarps.models import Department, StaffAssignment, User
+from sarps.forms import AssignmentForm, CourseForm, CreateStaffForm, DepartmentForm
+from sarps.models import Course, CourseRecord, Department, StaffAssignment, User
 from sarps.security import role_required
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -125,3 +125,35 @@ def delete_assignment(assignment_id):
     db.session.commit()
     flash("Assignment removed.", "success")
     return redirect(url_for("admin.assignments"))
+
+
+@admin_bp.route("/courses", methods=["GET", "POST"])
+@role_required(Role.ADMIN)
+def courses():
+    departments = list(db.session.scalars(select(Department).order_by(Department.name)))
+    form = CourseForm()
+    form.department_id.choices = [(0, "Any department")] + [(d.id, d.name) for d in departments]
+    if form.validate_on_submit():
+        db.session.add(Course(code=form.code.data, title=form.title.data, units=form.units.data,
+                              department_id=form.department_id.data or None))
+        db.session.commit()
+        flash("Course added.", "success")
+        return redirect(url_for("admin.courses"))
+    pagination = db.paginate(select(Course).order_by(Course.code), page=request.args.get("page", 1, type=int),
+                             per_page=current_app.config["PER_PAGE"], error_out=False)
+    return render_template("admin/courses.html", form=form, pagination=pagination)
+
+
+@admin_bp.route("/courses/<int:course_id>/delete", methods=["POST"])
+@role_required(Role.ADMIN)
+def delete_course(course_id):
+    course = db.session.get(Course, course_id)
+    if course is None:
+        abort(404)
+    if db.session.scalar(select(func.count()).select_from(CourseRecord).where(CourseRecord.course_id == course.id)):
+        flash("This course has student records, so it cannot be deleted.", "error")
+    else:
+        db.session.delete(course)
+        db.session.commit()
+        flash("Course removed.", "success")
+    return redirect(url_for("admin.courses"))

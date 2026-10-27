@@ -212,6 +212,10 @@
   .error-text { @apply mt-1 mb-0 text-[0.9rem] font-semibold text-risk-ink; }
   .field.check .check-label { @apply flex cursor-pointer items-start gap-3 font-normal; }
   .field.check input[type="checkbox"] { @apply mt-1 size-5 flex-none accent-[#5f67b0]; }
+  .is-hidden { @apply hidden; }
+  .field-label { @apply mb-1.5 block text-[0.92rem] font-semibold; }
+  .field .radio-option { @apply mb-2 flex cursor-pointer items-start gap-3 font-normal; }
+  .field .radio-option input { @apply mt-1 size-5 flex-none accent-[#5f67b0]; }
   .form-grid { @apply grid gap-x-5 sm:grid-cols-2; }
   .span-2 { @apply sm:col-span-2; }
   .password-wrap { @apply relative; }
@@ -245,9 +249,9 @@
   /* Result and meter */
   .result-grid { @apply mb-5 grid gap-4 lg:grid-cols-[1.1fr_1fr] lg:items-start; }
   .result-grid .card { @apply mb-0; }
-  .gauge { --gauge-fill: #d6456b; @apply mx-auto mt-2 max-w-85; }
-  .gauge-ok { --gauge-fill: #2a9d82; }
-  .gauge-risk { --gauge-fill: #d6456b; }
+  .gauge { --gauge-fill: #e05a7a; @apply mx-auto mt-2 max-w-85; }
+  .gauge-ok { --gauge-fill: #3dbda0; }
+  .gauge-risk { --gauge-fill: #e05a7a; }
   .gauge-canvas { @apply relative w-full; }
   .gauge-readout { @apply absolute inset-x-0 bottom-0 flex flex-col items-center text-center leading-tight; }
   .gauge-readout strong { @apply text-4xl font-extrabold text-ink; }
@@ -259,4 +263,21 @@
   .facts dt { @apply mt-2.5 text-[0.85rem] text-muted sm:mt-0; }
   .facts dd { @apply m-0 font-bold; }
   .chart-box { @apply relative h-70; }
+
+  /* Records, plan and advice */
+  .tag { @apply ml-1.5 inline-block rounded-full px-2 py-0 align-middle text-[0.7rem] leading-normal font-bold whitespace-nowrap; }
+  .tag-ok { @apply bg-seafoam/20 text-ok-ink; }
+  .tag-warn { @apply bg-[#fff0c2] text-[#6b4b00]; }
+  .tag-risk { @apply bg-rose/18 text-risk-ink; }
+  .need { @apply mr-3 inline-block whitespace-nowrap text-[0.9rem]; }
+  .plain-list { @apply my-3 grid list-disc gap-1.5 pl-5; }
+  .advice-card { @apply mb-5; }
+  .advice-list { @apply m-0 grid list-none gap-3 p-0; }
+  .advice { @apply rounded-xl border-l-4 bg-white/60 px-4 py-3; }
+  .advice h3 { @apply mb-1 text-base; }
+  .advice p { @apply mb-0 text-[0.95rem] text-muted; }
+  .advice-urgent { @apply border-rose; }
+  .advice-important { @apply border-[#e0a31a]; }
+  .advice-info { @apply border-wave; }
+  .advice-good { @apply border-seafoam; }
 }

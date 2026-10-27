@@ -16,3 +16,12 @@ def index():
 @login_required
 def dashboard():
     return redirect(url_for(home_endpoint(current_user)))
+
+
+@main_bp.route("/assumptions")
+def assumptions():
+    """A public page listing every rule and assumption the system relies on."""
+    from flask import current_app
+    from sarps import unn
+    return render_template("assumptions.html", bands=unn.GRADE_BANDS, classes=unn.DEGREE_CLASSES,
+                           model=current_app.extensions["prediction"].status())

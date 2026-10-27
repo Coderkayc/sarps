@@ -55,6 +55,10 @@ class Config:
     # the scale used in your training dataset.
     CGPA_MAX = float(os.environ.get("CGPA_MAX", "5.0"))
 
+    # The semester the "My courses" and "Plan" pages work on. Change in .env each semester.
+    CURRENT_SESSION = os.environ.get("CURRENT_SESSION", "2026/2027")
+    CURRENT_SEMESTER = int(os.environ.get("CURRENT_SEMESTER", "1"))
+
     MIN_PASSWORD_LENGTH = 8
     PER_PAGE = 20
 

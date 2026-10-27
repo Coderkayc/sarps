@@ -15,25 +15,34 @@ from sarps.extensions import db
 
 
 def write_synthetic_dataset(path, n=300, seed=0):
+    """Random made-up students in the model's input format (levels and rates)."""
     rng = np.random.default_rng(seed)
-    attendance = rng.uniform(20, 100, n)
-    assignments = rng.uniform(10, 100, n)
+    attendance = rng.integers(0, 7, n)
+    assignments = rng.uniform(0, 100, n)
+    ca_high = rng.uniform(0, 100, n)
+    ca_low = rng.uniform(0, 100, n)
+    hours = rng.integers(0, 10, n)
+    comfort = rng.integers(1, 6, n)
+    impact = rng.integers(1, 6, n)
     cgpa = rng.uniform(1, 5, n)
-    financial = rng.choice(["low", "medium", "high"], n)
-    hours = rng.uniform(0, 30, n)
-    score = 0.04 * attendance + 0.03 * assignments + 0.5 * cgpa + 0.1 * hours - 6.5 + rng.normal(0, 1, n)
+    score = (0.5 * attendance + 0.02 * assignments + 0.3 * hours + 0.5 * cgpa
+             + 0.1 * comfort - 0.1 * impact - 4.5 + rng.normal(0, 1, n))
     frame = pd.DataFrame({
-        "attendance_pct": attendance.round(1),
-        "assignment_completion_pct": assignments.round(1),
+        "attendance_level": attendance,
+        "assignment_submission_rate": assignments.round(1),
+        "ca_high_rate": ca_high.round(1),
+        "ca_low_rate": ca_low.round(1),
+        "study_hours_level": hours,
+        "financial_comfort": comfort,
+        "financial_impact": impact,
         "previous_cgpa": cgpa.round(2),
-        "financial_capability": financial,
-        "study_hours_per_week": hours.round(1),
         "not_at_risk": (score > 0).astype(int),
     })
-    # Real students leave optional boxes blank, so the test data does too.
+    # Real students leave some answers out, so the test data does too.
     frame.loc[rng.random(n) < 0.3, "previous_cgpa"] = np.nan
-    frame.loc[rng.random(n) < 0.2, "financial_capability"] = np.nan
-    frame.loc[rng.random(n) < 0.3, "study_hours_per_week"] = np.nan
+    frame.loc[rng.random(n) < 0.1, "assignment_submission_rate"] = np.nan
+    frame.loc[rng.random(n) < 0.1, "ca_high_rate"] = np.nan
+    frame.loc[rng.random(n) < 0.1, "ca_low_rate"] = np.nan
     frame.to_csv(path, index=False)
     return frame
 

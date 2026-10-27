@@ -25,6 +25,8 @@
       <h2>Latest result</h2>
       {% with assessment=latest %}{% include "_result.html" %}{% endwith %}
 
+      {% with advice=advice %}{% include "_advice.html" %}{% endwith %}
+
       {% if latest.is_flagged %}
         <div class="notice notice-info">
           This result is flagged for authorised academic staff, as you agreed when you submitted it.

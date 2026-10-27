@@ -31,6 +31,8 @@
           {% if current_user.is_authenticated %}
             {% if current_user.role == Role.STUDENT %}
               <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+              <a href="{{ url_for('student.courses') }}">My courses</a>
+              <a href="{{ url_for('student.plan') }}">Plan</a>
               <a href="{{ url_for('student.assess') }}">New assessment</a>
               <a href="{{ url_for('student.history') }}">History</a>
             {% elif current_user.role in STAFF_ROLES %}
@@ -39,6 +41,7 @@
               <a href="{{ url_for('admin.dashboard') }}">Overview</a>
               <a href="{{ url_for('admin.users') }}">Users</a>
               <a href="{{ url_for('admin.departments') }}">Departments</a>
+              <a href="{{ url_for('admin.courses') }}">Courses</a>
               <a href="{{ url_for('admin.assignments') }}">Assignments</a>
             {% endif %}
           {% else %}
@@ -83,7 +86,7 @@
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <p><strong>{{ app_name }}</strong>: {{ app_full_name }}</p>
-      <p>Final-year university project. Predictions are estimates, not certainties.</p>
+      <p>Final-year university project. Predictions are estimates, not certainties. <a href="{{ url_for('main.assumptions') }}">Assumptions</a></p>
     </div>
   </footer>
   {% endblock %}

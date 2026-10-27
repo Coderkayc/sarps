@@ -76,6 +76,21 @@ def register_template_helpers(app):
             "STAFF_ROLES": STAFF_ROLES,
         }
 
+    from ml.features import (ATTENDANCE_OPTIONS, FINANCIAL_COMFORT_OPTIONS, FINANCIAL_IMPACT_OPTIONS,
+                             STUDY_HOURS_OPTIONS, option_label)
+    option_sets = {"attendance": ATTENDANCE_OPTIONS, "study": STUDY_HOURS_OPTIONS,
+                   "comfort": FINANCIAL_COMFORT_OPTIONS, "impact": FINANCIAL_IMPACT_OPTIONS}
+
+    @app.template_global("answer")
+    def answer(kind, level):
+        """The dropdown wording a student chose, e.g. answer('attendance', 4)."""
+        return option_label(option_sets[kind], level) if level is not None else None
+
+    @app.template_filter("risk_display")
+    def risk_display(label):
+        """The two result labels exactly as specified."""
+        return "AT RISK \u26a0" if label == "At Risk" else "NOT AT RISK \u2713"
+
     @app.template_filter("dt")
     def format_datetime(value):
         return value.strftime("%d %b %Y, %H:%M UTC") if value else ""

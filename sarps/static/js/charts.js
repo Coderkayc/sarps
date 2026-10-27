@@ -7,7 +7,7 @@
   if (!canvas || !source) return;
 
   var data = JSON.parse(source.textContent);
-  var ok = "#2a9d82", risk = "#d6456b";
+  var ok = "#3dbda0", risk = "#e05a7a";
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   new Chart(canvas, {

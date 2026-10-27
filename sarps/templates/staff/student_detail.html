@@ -29,8 +29,8 @@
               <td>{{ a.created_at|dt }}</td>
               <td>{{ a.prob_not_at_risk|pct }}</td>
               <td>{{ risk_chip(a.risk_label) }}</td>
-              <td>{{ "%.0f"|format(a.attendance_pct) }}%</td>
-              <td>{{ "%.0f"|format(a.assignment_completion_pct) }}%</td>
+              <td>{% if a.attendance_level is not none %}{{ answer("attendance", a.attendance_level) }}{% elif a.attendance_pct is not none %}{{ "%.0f"|format(a.attendance_pct) }}%{% else %}-{% endif %}</td>
+              <td>{% if a.assignments_assigned %}{{ a.assignments_submitted }}/{{ a.assignments_assigned }}{% elif a.assignment_completion_pct is not none %}{{ "%.0f"|format(a.assignment_completion_pct) }}%{% else %}-{% endif %}</td>
               <td><a href="{{ url_for('staff.assessment_detail', assessment_id=a.id) }}">View</a></td>
             </tr>
           {% endfor %}

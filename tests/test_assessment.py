@@ -51,6 +51,41 @@ def test_without_a_model_the_form_is_disabled_and_nothing_is_saved(app, client):
     assert count_assessments() == 0
 
 
+# ---------- the form itself ----------
+def test_form_shows_every_question_and_the_exact_wording(model_app, model_client):
+    signed_in_student(model_client)
+    html = model_client.get("/student/assess").get_data(as_text=True)
+    from ml.features import (ATTENDANCE_OPTIONS, FINANCIAL_COMFORT_OPTIONS, FINANCIAL_IMPACT_OPTIONS,
+                             STUDY_HOURS_OPTIONS)
+    from markupsafe import escape
+    for _, text in ATTENDANCE_OPTIONS + STUDY_HOURS_OPTIONS + FINANCIAL_COMFORT_OPTIONS + FINANCIAL_IMPACT_OPTIONS:
+        assert str(escape(text)) in html, text
+    for text in ["Class attendance", "Assignment submission", "Tests and Continuous Assessments (CAs)",
+                 "Study hours per week", "Financial situation",
+                 "How many assignments have been assigned to you so far this semester?",
+                 "Out of those, how many have you submitted?",
+                 "How many tests or CAs have you done so far this semester?",
+                 "Out of those, how many do you think you scored above 70% in?",
+                 "How many do you think you scored below 50% in?",
+                 "How financially comfortable would you consider yourself as a student?",
+                 "Yes, I have my current CGPA", "No, I do not have my CGPA yet",
+                 "We understand test results are not always shown to you. Answer based on how you felt your "
+                 "performance was"]:
+        assert text in html, text
+
+
+def test_removed_questions_do_not_appear_anywhere(model_app, model_client):
+    signed_in_student(model_client)
+    post(model_client)
+    saved = db.session.query(Assessment).one()
+    pages = [model_client.get("/student/assess"), model_client.get(f"/student/assessments/{saved.id}"),
+             model_client.get("/student/")]
+    for page in pages:
+        html = page.get_data(as_text=True).lower()
+        for word in ("course difficulty", "carryover", "carry-over", "quiz average"):
+            assert word not in html, word
+
+
 # ---------- with a model ----------
 def test_valid_submission_is_saved_with_a_real_prediction(model_app, model_client):
     student = signed_in_student(model_client)
@@ -64,8 +99,11 @@ def test_valid_submission_is_saved_with_a_real_prediction(model_app, model_clien
     assert saved.is_flagged == (saved.risk_label == "At Risk")
     assert saved.model_version and saved.model_version != "unknown"
     assert saved.consent_given and saved.consent_version == "v1"
-    assert (saved.attendance_pct, saved.assignment_completion_pct) == (80, 70)
-    assert saved.previous_cgpa == 3.5 and saved.financial_capability == "medium"
+    assert saved.attendance_level == 4
+    assert (saved.assignments_assigned, saved.assignments_submitted) == (5, 4)
+    assert (saved.tests_done, saved.tests_high, saved.tests_low) == (4, 1, 1)
+    assert (saved.study_hours_level, saved.financial_comfort, saved.financial_impact) == (3, 3, 2)
+    assert saved.previous_cgpa == 3.5 and saved.cgpa_unavailable is False
 
 
 def test_result_page_shows_the_meter_with_the_saved_value(model_app, model_client):
@@ -75,39 +113,61 @@ def test_result_page_shows_the_meter_with_the_saved_value(model_app, model_clien
     html = model_client.get(f"/student/assessments/{saved.id}").get_data(as_text=True)
     assert f'data-gauge="{saved.prob_not_at_risk}"' in html
     assert f"{saved.prob_not_at_risk:.2f}%" in html
-    assert saved.risk_label in html
+    assert ("AT RISK \u26a0" if saved.risk_label == "At Risk" else "NOT AT RISK \u2713") in html
 
 
-def test_only_the_two_mandatory_fields_plus_consent_are_needed(model_app, model_client):
+def test_the_two_result_labels_are_exactly_as_specified(app, client):
+    for percent, expected, other in [(50.0, "AT RISK \u26a0", "NOT AT RISK"), (50.01, "NOT AT RISK \u2713", "AT RISK \u26a0")]:
+        app.extensions["prediction"] = FixedModel(percent)
+        signed_in_student(client) if percent == 50.0 else None
+        post(client)
+        saved = db.session.query(Assessment).order_by(Assessment.id.desc()).first()
+        html = client.get(f"/student/assessments/{saved.id}").get_data(as_text=True)
+        assert f'chip chip-{"risk" if percent == 50.0 else "ok"}">{expected}' in html
+        assert other not in html.split("Classification:")[1].split("</p>")[0]
+
+
+def test_no_cgpa_is_saved_as_missing_never_zero(model_app, model_client):
     signed_in_student(model_client)
-    response = post(model_client, previous_cgpa=None, financial_capability="", study_hours_per_week=None)
-    assert response.status_code == 302
-    saved = db.session.query(Assessment).one()
-    assert saved.previous_cgpa is None and saved.cgpa_unavailable is False
-    assert saved.financial_capability is None and saved.study_hours_per_week is None
-
-
-def test_cgpa_can_be_marked_unavailable(model_app, model_client):
-    signed_in_student(model_client)
-    response = post(model_client, previous_cgpa=None, cgpa_unavailable="y")
+    response = post(model_client, has_cgpa="no", previous_cgpa=None)
     assert response.status_code == 302
     saved = db.session.query(Assessment).one()
     assert saved.previous_cgpa is None and saved.cgpa_unavailable is True
 
 
-def test_cgpa_and_unavailable_together_is_rejected(model_app, model_client):
+def test_a_cgpa_typed_then_hidden_is_ignored(model_app, model_client):
     signed_in_student(model_client)
-    response = post(model_client, cgpa_unavailable="y")
-    assert "not both" in response.get_data(as_text=True)
+    assert post(model_client, has_cgpa="no", previous_cgpa="4.9").status_code == 302
+    saved = db.session.query(Assessment).one()
+    assert saved.previous_cgpa is None and saved.cgpa_unavailable is True
+
+
+def test_cgpa_choice_is_required_and_a_value_is_needed_for_yes(model_app, model_client):
+    signed_in_student(model_client)
+    assert "Please say whether you have a CGPA" in post(model_client, has_cgpa=None).get_data(as_text=True)
+    assert "Enter your CGPA" in post(model_client, has_cgpa="yes", previous_cgpa=None).get_data(as_text=True)
     assert count_assessments() == 0
 
 
-@pytest.mark.parametrize("missing", ["attendance_pct", "assignment_completion_pct"])
-def test_mandatory_fields_are_enforced(model_app, model_client, missing):
+def test_nothing_assigned_and_no_tests_is_handled_safely(model_app, model_client):
+    signed_in_student(model_client)
+    response = post(model_client, assignments_assigned="0", assignments_submitted="0",
+                    tests_done="0", tests_high="0", tests_low="0")
+    assert response.status_code == 302
+    saved = db.session.query(Assessment).one()
+    assert 0 <= saved.prob_not_at_risk <= 100
+    html = model_client.get(f"/student/assessments/{saved.id}").get_data(as_text=True)
+    assert "None assigned yet" in html and "None done yet" in html
+
+
+@pytest.mark.parametrize("missing", [
+    "attendance_level", "assignments_assigned", "assignments_submitted", "tests_done", "tests_high",
+    "tests_low", "study_hours_level", "financial_comfort", "financial_impact", "has_cgpa"])
+def test_every_question_is_required(model_app, model_client, missing):
     signed_in_student(model_client)
     response = post(model_client, **{missing: None})
     assert response.status_code == 200
-    assert "is required" in response.get_data(as_text=True)
+    assert 'class="error-text"' in response.get_data(as_text=True)
     assert count_assessments() == 0
 
 
@@ -119,12 +179,14 @@ def test_consent_is_required_before_submitting(model_app, model_client):
 
 
 @pytest.mark.parametrize("field, value", [
-    ("attendance_pct", "101"), ("attendance_pct", "-1"), ("attendance_pct", "abc"),
-    ("attendance_pct", "nan"), ("attendance_pct", "inf"),
-    ("assignment_completion_pct", "100.5"), ("assignment_completion_pct", "nan"),
-    ("previous_cgpa", "5.1"), ("previous_cgpa", "-0.1"), ("previous_cgpa", "nan"),
-    ("study_hours_per_week", "101"), ("study_hours_per_week", "-3"), ("study_hours_per_week", "inf"),
-    ("financial_capability", "rich"),
+    ("attendance_level", "7"), ("attendance_level", "-1"), ("attendance_level", "abc"), ("attendance_level", "2.5"),
+    ("study_hours_level", "10"), ("study_hours_level", "-1"),
+    ("financial_comfort", "0"), ("financial_comfort", "6"),
+    ("financial_impact", "0"), ("financial_impact", "6"),
+    ("assignments_assigned", "-1"), ("assignments_assigned", "1.5"), ("assignments_assigned", "abc"),
+    ("assignments_assigned", "1001"), ("tests_done", "-2"), ("tests_done", "x"),
+    ("previous_cgpa", "5.1"), ("previous_cgpa", "-0.1"), ("previous_cgpa", "nan"), ("previous_cgpa", "inf"),
+    ("has_cgpa", "maybe"), ("target_cgpa", "5.5"),
 ])
 def test_impossible_values_are_rejected(model_app, model_client, field, value):
     signed_in_student(model_client)
@@ -133,12 +195,44 @@ def test_impossible_values_are_rejected(model_app, model_client, field, value):
     assert count_assessments() == 0
 
 
+@pytest.mark.parametrize("overrides, message", [
+    (dict(assignments_assigned="3", assignments_submitted="4"), "cannot have submitted more assignments (4) than were assigned (3)"),
+    (dict(assignments_assigned="0", assignments_submitted="1"), "cannot have submitted more assignments (1) than were assigned (0)"),
+    (dict(tests_done="3", tests_high="4", tests_low="0"), "cannot be more than the number of tests or CAs you have done (3)"),
+    (dict(tests_done="3", tests_high="0", tests_low="4"), "cannot be more than the number of tests or CAs you have done (3)"),
+    (dict(tests_done="4", tests_high="3", tests_low="2"), "cannot be both above 70% and below 50%"),
+])
+def test_counts_must_make_sense_together(model_app, model_client, overrides, message):
+    signed_in_student(model_client)
+    response = post(model_client, **overrides)
+    assert response.status_code == 200
+    assert message in response.get_data(as_text=True)
+    assert count_assessments() == 0
+
+
+def test_counts_that_equal_the_total_are_accepted(model_app, model_client):
+    signed_in_student(model_client)
+    assert post(model_client, assignments_assigned="4", assignments_submitted="4",
+                tests_done="4", tests_high="4", tests_low="0").status_code == 302
+    assert post(model_client, tests_done="4", tests_high="2", tests_low="2").status_code == 302
+
+
 def test_boundary_values_are_accepted(model_app, model_client):
     signed_in_student(model_client)
-    for attendance, cgpa in [("0", "0"), ("100", "5")]:
-        response = post(model_client, attendance_pct=attendance, assignment_completion_pct=attendance,
-                        previous_cgpa=cgpa, study_hours_per_week=attendance)
-        assert response.status_code == 302, (attendance, cgpa)
+    for level, cgpa, count in [("0", "0", "0"), ("6", "5", "1000")]:
+        response = post(model_client, attendance_level=level, previous_cgpa=cgpa,
+                        assignments_assigned=count, assignments_submitted=count,
+                        tests_done=count, tests_high="0", tests_low="0")
+        assert response.status_code == 302, (level, cgpa)
+    saved = db.session.query(Assessment).order_by(Assessment.id).first()
+    assert saved.previous_cgpa == 0.0 and saved.cgpa_unavailable is False
+
+
+def test_a_made_up_option_value_cannot_be_submitted(model_app, model_client):
+    """A hand-crafted request cannot slip in a level that is not on the dropdown."""
+    signed_in_student(model_client)
+    assert post(model_client, attendance_level="99").status_code == 200
+    assert count_assessments() == 0
 
 
 # ---------- the 50% rule and flagging, with a fixed probability ----------
@@ -182,7 +276,7 @@ def test_student_dashboard_shows_latest_result(app, client):
     signed_in_student(client)
     post(client)
     html = client.get("/student/").get_data(as_text=True)
-    assert "30.00%" in html and "At Risk" in html and "flagged" in html
+    assert "30.00%" in html and "AT RISK" in html and "flagged" in html
 
 
 def test_staff_see_the_new_flagged_assessment(app, client):

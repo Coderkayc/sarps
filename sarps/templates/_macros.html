@@ -25,7 +25,7 @@
 {% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
 
 {% macro risk_chip(label) %}
-<span class="chip {{ 'chip-ok' if label == 'Not at Risk' else 'chip-risk' }}">{{ label }}</span>
+<span class="chip {{ 'chip-ok' if label == 'Not at Risk' else 'chip-risk' }}">{{ label|risk_display }}</span>
 {% endmacro %}
 
 {% macro pager(pagination, endpoint) %}
@@ -65,6 +65,25 @@
   </ul>
   {% endif %}
   {% if hint %}<p class="hint">{{ hint }}</p>{% endif %}
+  {% for error in f.errors %}<p class="error-text" role="alert">{{ error }}</p>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro figure(value, status, suffix="") %}
+{% if value is none %}<span class="muted">-</span>{% else %}{{ "%g"|format(value) }}{{ suffix }}
+  {% if status == "official" %}<span class="tag tag-ok">Official</span>{% elif status == "unverified" %}<span class="tag tag-warn">Unverified</span>{% endif %}{% endif %}
+{% endmacro %}
+
+{% macro radios(f, required=True) %}
+<div class="field{% if f.errors %} has-error{% endif %}" role="radiogroup" aria-labelledby="{{ f.id }}-label">
+  <span class="field-label" id="{{ f.id }}-label">{{ f.label.text }}
+    {% if required %}<span class="chip chip-req">Required</span>{% endif %}</span>
+  {% for value, text in f.choices %}
+  <label class="radio-option" for="{{ f.id }}-{{ loop.index0 }}">
+    <input type="radio" id="{{ f.id }}-{{ loop.index0 }}" name="{{ f.name }}" value="{{ value }}"{% if f.data == value %} checked{% endif %}>
+    <span>{{ text }}</span>
+  </label>
+  {% endfor %}
   {% for error in f.errors %}<p class="error-text" role="alert">{{ error }}</p>{% endfor %}
 </div>
 {% endmacro %}

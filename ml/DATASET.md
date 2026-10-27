@@ -6,20 +6,24 @@ SARPS can only make genuine predictions from a real dataset of past students. Th
 A CSV file, one row per student, with a header row.
 
 ## Columns (exact names)
+The columns hold the same NUMBERS the web form produces, so training and prediction always agree. The rules are in `ml/features.py`.
 
-| Column | Required? | Meaning |
-|---|---|---|
-| `attendance_pct` | yes | Class attendance, 0 to 100 |
-| `assignment_completion_pct` | yes | Share of assignments completed, 0 to 100 |
-| `previous_cgpa` | no | Previous CGPA on your university's scale. Leave blank if the student had none |
-| `financial_capability` | no | `low`, `medium` or `high` (or 1, 2, 3). Leave blank if unknown |
-| `study_hours_per_week` | no | Average study hours per week, 0 to 100. Leave blank if unknown |
-| `not_at_risk` | yes | The real outcome: **1 = Not at Risk, 0 = At Risk** |
+| Column | Meaning |
+|---|---|
+| `attendance_level` | **Required.** 0 = Never (0%), 1 = 1-20%, 2 = 21-40%, 3 = 41-60%, 4 = 61-80%, 5 = 81-95%, 6 = 96-100% |
+| `assignment_submission_rate` | Assignments submitted divided by assigned, as 0-100. Blank if none were assigned |
+| `ca_high_rate` | Share of tests/CAs the student felt they scored above 70% in, 0-100. Blank if none done |
+| `ca_low_rate` | Share of tests/CAs the student felt they scored below 50% in, 0-100. Blank if none done |
+| `study_hours_level` | 0 = none, 1 = below 5 h, 2 = 5-10, 3 = 10-15, 4 = 15-20, 5 = 20-25, 6 = 25-30, 7 = 30-35, 8 = 35-40, 9 = over 40 (hours per week) |
+| `financial_comfort` | 1 = Severely Struggling, 2 = Somewhat Struggling, 3 = Fairly Comfortable, 4 = Comfortable, 5 = Very Comfortable |
+| `financial_impact` | How often money affects taking part in school: 1 = Never ... 5 = Almost always |
+| `previous_cgpa` | Current CGPA on your scale (0-5). Blank if the student had none |
+| `not_at_risk` | **Required.** The real outcome: **1 = Not at Risk, 0 = At Risk** |
 
-Rows missing `attendance_pct`, `assignment_completion_pct` or `not_at_risk` are dropped (and reported). Blank optional values are fine: the model is built to handle them, because real students will leave them blank too.
+All columns must exist in the file, but any except `attendance_level` and `not_at_risk` may be blank. Blank values are filled with the training median, never with zero. If your data genuinely lacks a column, leave it empty and train with `--unused` (below), so the model ignores it and the app says so.
 
 ## Deciding the label (the most important choice)
-You must decide, and be able to defend in your project report, what "At Risk" means in your data. Examples: final-semester GPA below a threshold, a failed course, or a probation outcome. The label must describe **what happened later**, not something computed from the five inputs above, otherwise the model just learns your formula.
+You must decide, and be able to defend in your project report, what "At Risk" means in your data. Examples: final-semester GPA below a threshold, a failed course, or a probation outcome. The label must describe **what happened later**, not something computed from the inputs above, otherwise the model just learns your formula.
 
 ## Minimum size
 At least 60 usable rows and at least 10 students in each class. More is much better, and a balanced mix helps.
@@ -28,26 +32,20 @@ At least 60 usable rows and at least 10 students in each class. More is much bet
 ```bash
 python -m ml.train --data path/to/dataset.csv
 ```
-Optional: `--algorithm forest`, `--balanced` (if At Risk students are rare), `--cgpa-max 4.0`.
+Options: `--algorithm forest`, `--balanced` (if At Risk students are rare), `--cgpa-max 5.0`, `--unused COLUMN ...`.
 
-The CGPA scale in the dataset must match `CGPA_MAX` in `.env`, otherwise students will be compared on a different scale from the one the model learned.
-
-The script prints accuracy, ROC AUC, and especially **at_risk_recall** (the share of truly At Risk students the model catches). It saves the model to `ml/models/sarps_model.joblib` plus a `.json` report of the results, which you can cite in your project report.
-
-## Honest limits to state in your report
-- A model is only as good as its data: a small or biased dataset gives an unreliable model.
-- The percentage shown to students is the model's estimated probability, not a certainty.
-- Retrain whenever you get new data. The app picks up the new model file automatically.
+The script prints accuracy, ROC AUC, and especially **at_risk_recall** (the share of truly At Risk students the model catches). It saves the model to `ml/models/sarps_model.joblib` plus a `.json` report you can cite. The CGPA scale in the dataset must match `CGPA_MAX` in `.env`, otherwise the app refuses the model.
 
 ## The model currently included (read before you present it)
-`ml/models/sarps_model.joblib` was trained on the public IUBAT (Bangladesh) survey, 894 CS students, using `ml/prepare_iubat.py`. Command used:
+`ml/models/sarps_model.joblib` was trained on the public IUBAT (Bangladesh) survey, 894 CS students, using `ml/prepare_iubat.py`:
 ```bash
-python -m ml.train --data ml/data/iubat_training.csv --unused assignment_completion_pct --algorithm logistic --balanced
+python -m ml.prepare_iubat --raw IUBAT_Student_Performance_Dataset.csv --out ml/data/iubat_training.csv
+python -m ml.train --data ml/data/iubat_training.csv --algorithm logistic --balanced \
+  --unused assignment_submission_rate ca_high_rate ca_low_rate financial_impact
 ```
-Be upfront about these limits in your report:
-- **Label:** At Risk = the student ever fell on academic probation (26% of students). It is a real outcome, but "ever" does not say when.
-- **Assignment completion is not in that dataset.** The form still collects it, but the model ignores it (the app says so on the form and result).
-- **Proxies:** previous CGPA = the student's current CGPA, rescaled from 4.0 to 5.0. Financial capability = family-income thirds (low/medium/high) from that sample.
+State these limits in your report:
+- **Label:** At Risk = the student ever fell on academic probation (26% of students). A real outcome, but "ever" does not say when.
+- **Four inputs are collected but ignored by the model**: assignment submission, test/CA perception, and "how often money affects participation". That dataset has no such columns, and inventing them would be fake. They are saved and used for the advice, and the app says so on the form and the result.
+- **Proxies:** CGPA = the student's current CGPA rescaled from 4.0 to 5.0. Financial comfort = family income split into five equal groups. Attendance % and daily study hours are put into the same bands as the form dropdowns.
 - **Different country and university** from yours, so treat results as a demonstration. Retrain with your own records when you can.
-- **Accuracy on unseen students:** about 73% accuracy, ROC AUC 0.77 (5-fold cross-validated 0.73), and it catches about 68% of At Risk students while wrongly flagging about 26% of the others. `--balanced` makes the model lean towards At Risk, so the percentage is a risk score, not a calibrated probability.
-- **CGPA scale:** the model was trained on a 5.0 scale. `CGPA_MAX` in `.env` must stay 5.0, otherwise the app refuses to use the model.
+- **Accuracy on unseen students:** about 72% accuracy, ROC AUC 0.76 (5-fold cross-validated 0.72); it catches about 68% of At Risk students while wrongly flagging about 27% of the others. `--balanced` leans the model towards At Risk, so the percentage is a risk score, not a calibrated probability.

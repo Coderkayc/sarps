@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf, figure %}
+{% block title %}My courses | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div>
+        <h1>My courses</h1>
+        <p class="muted">{{ session_name }} session, semester {{ semester }}. Attendance, CA (out of 30) and exam (out of 70).</p>
+      </div>
+      <a class="btn btn-primary" href="{{ url_for('student.plan') }}">See my plan</a>
+    </div>
+
+    <div class="notice notice-info">
+      <p><strong>Which figure counts?</strong> Staff entry of official figures is not available yet, so for now every figure here is your own and unverified. Once it is, figures entered by lecturers, the ICT office or your class rep are
+      <span class="tag tag-ok">Official</span> and always win. If nothing official exists yet, the figure you type is used and
+      marked <span class="tag tag-warn">Unverified</span>. If your figure differs from the official one, the record is flagged so staff can check it.</p>
+    </div>
+
+    {% if rows %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Course</th><th>Units</th><th>Attendance %</th><th>CA /30</th><th>Exam /70</th><th>Grade</th><th></th></tr></thead>
+        <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>{{ r.course.code }}<br><span class="muted small">{{ r.course.title }}</span>
+              {% if r.disputed %}<br><span class="tag tag-risk">Differs from your figure: {{ r.disputed|join(", ") }}</span>{% endif %}</td>
+            <td>{{ r.units }}</td>
+            <td>{{ figure(r.attendance, r.attendance_status, "%") }}</td>
+            <td>{{ figure(r.ca, r.ca_status) }}</td>
+            <td>{{ figure(r.exam, r.exam_status) }}</td>
+            <td>{% if r.grade %}<strong>{{ r.grade }}</strong>{% else %}<span class="muted">pending</span>{% endif %}</td>
+            <td>
+              <form method="post" action="{{ url_for('student.course_delete', record_id=r.record.id) }}" class="inline-form">
+                {{ csrf() }}<button class="btn btn-ghost btn-small" type="submit">{{ "Clear mine" if r.record.attendance_official is not none or r.record.ca_official is not none or r.record.exam_official is not none else "Remove" }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="card empty"><h2>No courses yet</h2><p>Add the courses you are taking this semester below.</p></div>
+    {% endif %}
+
+    <section class="card form-card" aria-labelledby="claim-heading">
+      <h2 id="claim-heading">Add or correct your figures</h2>
+      <p class="muted">Use this when a record is missing or you think it is wrong. Leave a box empty to keep what is already saved.</p>
+      <form method="post" novalidate>
+        {{ csrf() }}
+        {{ field(form.course_id) }}
+        <div class="form-grid">
+          {{ field(form.attendance_claimed, attrs={"type": "number", "step": "any", "min": 0, "max": 100}, optional=True) }}
+          {{ field(form.ca_claimed, attrs={"type": "number", "step": "any", "min": 0, "max": 30}, optional=True) }}
+          {{ field(form.exam_claimed, attrs={"type": "number", "step": "any", "min": 0, "max": 70}, optional=True) }}
+        </div>
+        <button class="btn btn-primary" type="submit" {% if not form.course_id.choices %}disabled{% endif %}>Save</button>
+      </form>
+    </section>
+  </div>
+</section>
+{% endblock %}
