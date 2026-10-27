@@ -75,7 +75,7 @@
   .wrap.narrow { @apply w-[min(720px,92%)]; }
   .muted { @apply text-muted; }
   .small { @apply text-[0.85rem]; }
-  .skip-link { @apply absolute -left-[999px] top-0 z-100 rounded-br-lg bg-ink px-4 py-2 text-white focus:left-0; }
+  .skip-link { @apply absolute -left-249.75ka top-0 z-100 rounded-br-lg bg-ink px-4 py-2 text-white focus:left-0; }
   header, main, footer, .flashes { @apply relative z-1; }
 
   .glass { @apply border border-white/75 bg-shine/80 shadow-glass backdrop-blur-lg backdrop-saturate-150; }
@@ -121,7 +121,7 @@
   .landing-nav { @apply mx-auto flex w-[min(1200px,calc(100%-2rem))] flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border border-white/75 bg-(image:--gradient-nav) px-4 py-3 text-shine backdrop-blur-xl; }
   .landing-nav .logo { @apply text-shine; }
   .landing-nav .logo-mark { @apply bg-white/20 bg-none shadow-none; }
-  .landing-links { @apply order-3 flex w-full flex-wrap justify-center gap-x-6 gap-y-1 text-[0.95rem] font-semibold sm:order-none sm:w-auto; }
+  .landing-links { @apply order-3 flex w-full flex-wrap justify-center gap-x-6 gap-y-1 text-[0.95rem] font-semibold sm:order-0 sm:w-auto; }
   .landing-links a { @apply py-1 text-shine no-underline hover:text-heaven; }
   .landing-actions { @apply flex items-center gap-2; }
   .landing-nav .btn-ghost { @apply border-white/35 text-shine hover:bg-white/15; }
@@ -227,7 +227,7 @@
   .form-grid { @apply grid gap-x-5 sm:grid-cols-2; }
   .span-2 { @apply sm:col-span-2; }
   .password-wrap { @apply relative; }
-  .password-wrap .input { @apply pr-[4.5rem]; }
+  .password-wrap .input { @apply pr-18; }
   .password-toggle { @apply absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-[0.85rem] font-bold text-wave-ink hover:bg-heaven/70; }
   .password-rules { @apply mt-2.5 mb-0 hidden list-none gap-x-4 gap-y-1 p-0 text-[0.82rem]; }
   .password-rules.is-active { @apply grid sm:grid-cols-2; }
