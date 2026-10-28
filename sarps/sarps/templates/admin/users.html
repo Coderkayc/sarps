@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf, pager %}
+{% block title %}Users | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h1>Users</h1>
+
+    <section class="card form-card" aria-labelledby="create-heading">
+      <h2 id="create-heading">Create a staff account</h2>
+      <p class="muted">Students register themselves. Give new staff the temporary password privately.</p>
+      <form method="post" novalidate>
+        {{ csrf() }}
+        {{ field(form.full_name, required=True) }}
+        {{ field(form.email, attrs={"type": "email"}, required=True) }}
+        {{ field(form.role, required=True) }}
+        {{ field(form.department_id, hint="Required for Head of Department. Optional for others.") }}
+        {{ field(form.password, attrs={"autocomplete": "new-password"}, required=True) }}
+        <button class="btn btn-primary" type="submit">Create account</button>
+      </form>
+    </section>
+
+    <form method="get" class="filter-bar">
+      <label class="sr-only" for="role-filter">Filter by role</label>
+      <select class="input" id="role-filter" name="role">
+        <option value="">All roles</option>
+        {% for value, label in role_labels.items() %}
+          <option value="{{ value }}" {% if value == role_filter %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-ghost" type="submit">Filter</button>
+    </form>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for u in pagination.items %}
+          <tr>
+            <td>{{ u.full_name }}{% if u.matric_number %}<br><small class="muted">{{ u.matric_number }}</small>{% endif %}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.role_label }}</td>
+            <td>{{ u.department.name if u.department else "-" }}</td>
+            <td>{% if u.active %}<span class="chip chip-ok">Active</span>{% else %}<span class="chip chip-risk">Deactivated</span>{% endif %}</td>
+            <td>
+              {% if u.id != current_user.id %}
+              <form method="post" action="{{ url_for('admin.toggle_user', user_id=u.id) }}" class="inline-form">
+                {{ csrf() }}
+                <button class="btn btn-ghost btn-small" type="submit">{{ "Deactivate" if u.active else "Reactivate" }}</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pager(pagination, 'admin.users', role=role_filter or None) }}
+  </div>
+</section>
+{% endblock %}

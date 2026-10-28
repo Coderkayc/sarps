@@ -53,8 +53,9 @@
 
 /* ---------- Base (Tailwind's reset removes heading and link styles, so restore them) ---------- */
 @layer base {
-  html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
-  body { @apply relative min-h-screen bg-shine font-sans leading-relaxed text-ink; }
+  html { scroll-behavior: smooth; scroll-padding-top: 6rem; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  /* dvh = the visible height on phones, so pages are not cut off by the browser's address bar. */
+  body { @apply relative min-h-screen min-h-dvh bg-shine font-sans leading-relaxed text-ink; }
   body.layout-dash, body.layout-auth { background: var(--gradient-sky) fixed; }
   h1, h2, h3 { @apply font-extrabold leading-tight text-ink; }
   h1 { @apply mb-2 text-3xl sm:text-4xl; }
@@ -72,7 +73,7 @@
   .wrap.narrow { @apply w-[min(720px,92%)]; }
   .muted { @apply text-muted; }
   .small { @apply text-[0.85rem]; }
-  .skip-link { @apply absolute -left-249.75 top-0 z-100 rounded-br-lg bg-ink px-4 py-2 text-white focus:left-0; }
+  .skip-link { @apply absolute -left-[999px] top-0 z-100 rounded-br-lg bg-ink px-4 py-2 text-white focus:left-0; }
   header, main, footer, .flashes { @apply relative z-1; }
 
   .glass { @apply border border-white/75 bg-shine/80 shadow-glass backdrop-blur-lg backdrop-saturate-150; }
@@ -90,15 +91,16 @@
   .logo-link { @apply inline-block no-underline; }
   .site-header { @apply sticky top-4 z-20 mx-auto mt-4 w-[min(1100px,92%)] rounded-2xl; }
   .header-inner { @apply flex flex-wrap items-center justify-between gap-2 px-4 py-2.5; }
-  .nav-toggle { @apply inline-flex size-11 cursor-pointer items-center justify-center rounded-xl border border-line bg-transparent md:hidden; }
+  .nav-toggle { @apply inline-flex size-11 cursor-pointer items-center justify-center rounded-xl border border-line bg-transparent lg:hidden; }
   .nav-toggle-bar, .nav-toggle-bar::before, .nav-toggle-bar::after { @apply relative block h-0.5 w-5 rounded-sm bg-ink; }
   .nav-toggle-bar::before, .nav-toggle-bar::after { content: ""; @apply absolute left-0; }
   .nav-toggle-bar::before { @apply -top-1.5; }
   .nav-toggle-bar::after { @apply top-1.5; }
-  .site-nav { @apply hidden w-full flex-col gap-1 pb-3 pt-2 md:flex md:w-auto md:flex-row md:items-center md:p-0; }
+  /* The full menu needs a wide screen (the admin has five links), so tablets get the menu button too. */
+  .site-nav { @apply hidden w-full flex-col gap-1 pb-3 pt-2 lg:flex lg:w-auto lg:flex-row lg:items-center lg:p-0; }
   .site-nav.is-open { @apply flex; }
   .site-nav > a { @apply rounded-xl px-3 py-2 font-semibold text-ink no-underline hover:bg-heaven/70; }
-  .nav-account { @apply flex flex-col items-stretch gap-2 sm:flex-row sm:items-center md:ml-3 md:gap-3 md:border-l md:border-line md:pl-4; }
+  .nav-account { @apply flex flex-col items-stretch gap-2 sm:flex-row sm:items-center lg:ml-3 lg:gap-3 lg:border-l lg:border-line lg:pl-4; }
   .who { @apply flex items-center gap-2.5 leading-tight font-bold text-ink; }
   .who small { @apply block font-medium text-muted; }
   .avatar { @apply grid size-9 flex-none place-items-center rounded-full bg-blush/55 font-extrabold text-wave-ink; }
@@ -108,7 +110,8 @@
   .btn { @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-5 py-3 text-center font-bold no-underline transition hover:-translate-y-0.5; }
   .btn-primary { @apply bg-(image:--gradient-button) text-white shadow-glow; }
   .btn-ghost { @apply border-line bg-transparent text-ink hover:bg-heaven/70; }
-  .btn-small { @apply px-3.5 py-1.5 text-[0.9rem]; }
+  .btn-small { @apply min-h-10 px-3.5 py-1.5 text-[0.9rem]; }
+  .link-tap { @apply inline-block py-2.5; }
   .btn-block { @apply flex h-12 w-full; }
   .btn-disabled, .btn:disabled { @apply cursor-not-allowed opacity-55 hover:translate-y-0; }
   .site-nav a.btn-primary, .landing-nav a.btn-primary { @apply text-white; }
@@ -118,7 +121,7 @@
   .landing-nav { @apply mx-auto flex w-[min(1200px,calc(100%-2rem))] flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl border border-white/75 bg-(image:--gradient-nav) px-4 py-3 text-shine backdrop-blur-xl; }
   .landing-nav .logo { @apply text-shine; }
   .landing-nav .logo-mark { @apply bg-white/20 bg-none shadow-none; }
-  .landing-links { @apply order-3 flex w-full flex-wrap justify-center gap-x-6 gap-y-1 text-[0.95rem] font-semibold sm:order-0 sm:w-auto; }
+  .landing-links { @apply order-3 flex w-full flex-wrap justify-center gap-x-6 gap-y-1 text-[0.95rem] font-semibold sm:order-none sm:w-auto; }
   .landing-links a { @apply py-1 text-shine no-underline hover:text-heaven; }
   .landing-actions { @apply flex items-center gap-2; }
   .landing-nav .btn-ghost { @apply border-white/35 text-shine hover:bg-white/15; }
@@ -158,7 +161,7 @@
   .footer-inner p { @apply mb-0; }
 
   /* Sign in / register */
-  .auth-page { @apply relative z-1 grid min-h-screen place-items-center px-4 py-12; }
+  .auth-page { @apply relative z-1 grid min-h-screen min-h-dvh place-items-center px-4 py-12; }
   .auth-panel { @apply w-full max-w-md rounded-3xl bg-shine/85 p-6 sm:p-10; }
   .auth-panel.wide { @apply max-w-2xl; }
   .auth-panel h1 { @apply mt-8 text-3xl; }
@@ -224,7 +227,7 @@
   .form-grid { @apply grid gap-x-5 sm:grid-cols-2; }
   .span-2 { @apply sm:col-span-2; }
   .password-wrap { @apply relative; }
-  .password-wrap .input { @apply pr-13; }
+  .password-wrap .input { @apply pr-[4.5rem]; }
   .password-toggle { @apply absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer rounded-lg border-0 bg-transparent px-2.5 py-1.5 text-[0.85rem] font-bold text-wave-ink hover:bg-heaven/70; }
   .password-rules { @apply mt-2.5 mb-0 hidden list-none gap-x-4 gap-y-1 p-0 text-[0.82rem]; }
   .password-rules.is-active { @apply grid sm:grid-cols-2; }
@@ -239,6 +242,20 @@
   .table th, .table td { @apply border-b border-blush/40 px-4 py-3 text-left align-middle; }
   .table th { @apply bg-heaven/35 text-[0.78rem] tracking-wider text-muted uppercase; }
   .table tr:last-child td { @apply border-b-0; }
+  /* On phones each table row becomes a small card: "label  value" lines instead of a sideways scroll.
+     main.js copies each column heading onto its cells (data-label). */
+  @media (max-width: 39.99rem) {
+    .table { min-width: 0; }
+    .table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+    .table tr { padding: 0.5rem 0; border-bottom: 1px solid color-mix(in srgb, var(--color-blush) 40%, transparent); }
+    .table tr:last-child { border-bottom: 0; }
+    .table td { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border: 0; padding: 0.35rem 1rem; text-align: right; }
+    .table td[data-label]:not([data-label=""])::before { content: attr(data-label); flex: none; max-width: 42%; text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-muted); }
+    .table .cell-value { min-width: 0; overflow-wrap: anywhere; }
+    .row-flag td:first-child { box-shadow: none; }
+    .table tr.row-flag { box-shadow: inset 4px 0 0 var(--color-rose); }
+  }
   .row-flag td:first-child { box-shadow: inset 4px 0 0 var(--color-rose); }
   .filter-bar { @apply mb-4 flex flex-wrap gap-2; }
   .filter-bar .input { @apply w-auto flex-[1_1_200px]; }
@@ -254,6 +271,7 @@
   /* Result and meter */
   .result-grid { @apply mb-5 grid gap-4 lg:grid-cols-[1.1fr_1fr] lg:items-start; }
   .result-grid .card { @apply mb-0; }
+  .result-grid > * { min-width: 0; }   /* lets the meter shrink on 360px phones instead of pushing the page wider */
   .gauge { --gauge-fill: #e05a7a; @apply mx-auto mt-2 max-w-85; }
   .gauge-ok { --gauge-fill: #3dbda0; }
   .gauge-risk { --gauge-fill: #e05a7a; }

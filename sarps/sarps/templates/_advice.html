@@ -1,0 +1,14 @@
+{# Plain-language advice list. `advice` is a list of {kind, title, body}. #}
+{% if advice %}
+<section class="card advice-card" aria-labelledby="advice-heading">
+  <h2 id="advice-heading">What this means for you</h2>
+  <ul class="advice-list">
+    {% for item in advice %}
+    <li class="advice advice-{{ item.kind }}">
+      <h3>{{ item.title }}</h3>
+      <p>{{ item.body }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}

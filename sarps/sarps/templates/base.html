@@ -1,0 +1,97 @@
+{% from "_macros.html" import logo %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }} | {{ app_full_name }}{% endblock %}</title>
+  <meta name="description" content="SARPS helps university students assess their academic risk throughout the semester.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+</head>
+<body class="{% block body_class %}layout-dash{% endblock %}">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  {% block backdrop %}
+  <div class="backdrop" aria-hidden="true"><span class="blob blob-1"></span><span class="blob blob-2"></span><span class="blob blob-3"></span></div>
+  {% endblock %}
+
+  {% block header %}
+  <header class="site-header glass">
+    <div class="header-inner">
+      <a class="brand logo-link" href="{{ url_for('main.index') }}" aria-label="{{ app_name }} home">{{ logo() }}</a>
+
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+        <span class="sr-only">Toggle menu</span>
+        <span class="nav-toggle-bar" aria-hidden="true"></span>
+      </button>
+
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        {% block nav_links %}
+          {% if current_user.is_authenticated %}
+            {% if current_user.role == Role.STUDENT %}
+              <a href="{{ url_for('student.dashboard') }}">Dashboard</a>
+              <a href="{{ url_for('student.courses') }}">My courses</a>
+              <a href="{{ url_for('student.plan') }}">Plan</a>
+              <a href="{{ url_for('student.assess') }}">New assessment</a>
+              <a href="{{ url_for('student.history') }}">History</a>
+            {% elif current_user.role in STAFF_ROLES %}
+              <a href="{{ url_for('staff.dashboard') }}">Students</a>
+            {% elif current_user.role == Role.ADMIN %}
+              <a href="{{ url_for('admin.dashboard') }}">Overview</a>
+              <a href="{{ url_for('admin.users') }}">Users</a>
+              <a href="{{ url_for('admin.departments') }}">Departments</a>
+              <a href="{{ url_for('admin.courses') }}">Courses</a>
+              <a href="{{ url_for('admin.assignments') }}">Assignments</a>
+            {% endif %}
+          {% else %}
+            <a href="{{ url_for('main.index') }}">Home</a>
+          {% endif %}
+        {% endblock %}
+        <span class="nav-account">
+          {% if current_user.is_authenticated %}
+            <span class="who">
+              <span class="avatar" aria-hidden="true">{{ current_user.full_name[:1]|upper }}</span>
+              <span>{{ current_user.full_name }}<small>{{ current_user.role_label }}</small></span>
+            </span>
+            <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-ghost btn-small" type="submit">Sign out</button>
+            </form>
+          {% else %}
+            <a class="btn btn-ghost btn-small" href="{{ url_for('auth.login') }}">Sign in</a>
+            <a class="btn btn-primary btn-small" href="{{ url_for('auth.register') }}">Register</a>
+          {% endif %}
+        </span>
+      </nav>
+    </div>
+  </header>
+  {% endblock %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="wrap flashes">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p><strong>{{ app_name }}</strong>: {{ app_full_name }}</p>
+      <p>Final-year university project. Predictions are estimates, not certainties. <a href="{{ url_for('main.assumptions') }}">Assumptions</a></p>
+    </div>
+  </footer>
+  {% endblock %}
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

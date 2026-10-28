@@ -82,7 +82,7 @@ def test_the_template_for_real_data_has_the_right_header():
     assert header.split(",") == FEATURE_COLUMNS + ["not_at_risk"]
 
 
-def test_all_inputs_count_and_the_result_says_demo():
+def test_all_inputs_count_and_the_result_states_the_data_is_synthetic():
     config = type("ShippedConfig", (TestConfig,), {"MODEL_PATH": str(SHIPPED)})
     app, ctx = _build(config)
     try:
@@ -92,7 +92,7 @@ def test_all_inputs_count_and_the_result_says_demo():
         response = client.post("/student/assess", data=dict(VALID_ASSESSMENT), follow_redirects=True)
         html = response.get_data(as_text=True)
         assert response.status_code == 200
-        assert "Demo result" in html and "DEMO MODEL" in html
+        assert "trained on synthetic data" in html and "DEMO MODEL" not in html
         assert "not used by the current model" not in html     # nothing is ignored now
     finally:
         db.session.remove()

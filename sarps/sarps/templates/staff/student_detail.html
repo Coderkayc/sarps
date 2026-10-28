@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import risk_chip %}
+{% block title %}{{ student.full_name }} | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div>
+        <h1>{{ student.full_name }}</h1>
+        <p class="muted">{{ student.matric_number }} · {{ student.department.name if student.department else "No department" }} · {{ student.email }}</p>
+      </div>
+      <a href="{{ url_for('staff.dashboard') }}">Back to students</a>
+    </div>
+
+    {% if assessments %}
+      <section class="card" aria-labelledby="trend-heading">
+        <h2 id="trend-heading">Probability of Not at Risk over time</h2>
+        <div class="chart-box"><canvas id="history-chart" role="img" aria-label="Line chart of this student's probability of being Not at Risk over time. The values are listed in the table below."></canvas></div>
+        <script type="application/json" id="history-data">{{ chart|tojson }}</script>
+      </section>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Probability of Not at Risk</th><th>Result</th><th>Attendance</th><th>Assignments</th><th></th></tr></thead>
+          <tbody>
+          {% for a in assessments %}
+            <tr class="{{ 'row-flag' if a.is_flagged else '' }}">
+              <td>{{ a.created_at|dt }}</td>
+              <td>{{ a.prob_not_at_risk|pct }}</td>
+              <td>{{ risk_chip(a.risk_label) }}</td>
+              <td>{% if a.attendance_level is not none %}{{ answer("attendance", a.attendance_level) }}{% elif a.attendance_pct is not none %}{{ "%.0f"|format(a.attendance_pct) }}%{% else %}-{% endif %}</td>
+              <td>{% if a.assignments_assigned %}{{ a.assignments_submitted }}/{{ a.assignments_assigned }}{% elif a.assignment_completion_pct is not none %}{{ "%.0f"|format(a.assignment_completion_pct) }}%{% else %}-{% endif %}</td>
+              <td><a href="{{ url_for('staff.assessment_detail', assessment_id=a.id) }}">View</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card empty"><h2>No assessments yet</h2><p>This student has not submitted an assessment.</p></div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if assessments %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endif %}
+{% endblock %}

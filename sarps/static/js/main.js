@@ -18,3 +18,22 @@
     if (event.target.tagName === "A") setOpen(false);
   });
 })();
+
+// Tables on phones: label every cell with its column heading so each row can show as a small card.
+(function () {
+  document.querySelectorAll("table.table").forEach(function (table) {
+    var heads = Array.prototype.map.call(table.querySelectorAll("thead th"), function (th) {
+      return th.textContent.trim();
+    });
+    table.querySelectorAll("tbody tr").forEach(function (row) {
+      Array.prototype.forEach.call(row.children, function (cell, index) {
+        if (cell.tagName !== "TD" || cell.hasAttribute("colspan")) return;
+        cell.setAttribute("data-label", heads[index] || "");
+        var wrapper = document.createElement("span");
+        wrapper.className = "cell-value";
+        while (cell.firstChild) wrapper.appendChild(cell.firstChild);
+        cell.appendChild(wrapper);
+      });
+    });
+  });
+})();

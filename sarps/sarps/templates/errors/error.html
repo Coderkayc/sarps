@@ -1,0 +1,5 @@
+{% extends "layout_auth.html" %}
+{% block title %}{{ title }} | {{ app_name }}{% endblock %}
+{% block auth_title %}{{ title }}{% endblock %}
+{% block auth_subtitle %}Error {{ code }}{% endblock %}
+{% block auth_body %}<p>{{ message }}</p><a class="btn btn-primary btn-block" href="{{ url_for('main.index') }}">Back to home</a>{% endblock %}

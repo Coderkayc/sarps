@@ -17,7 +17,7 @@
     <section class="card" aria-labelledby="model-heading">
       <h2 id="model-heading">Prediction model</h2>
       {% if model.available %}
-        <p><span class="chip chip-ok">Installed</span>{% if model.synthetic %} <span class="chip chip-risk">Synthetic demo model</span>{% endif %} Version <code>{{ model.version }}</code></p>
+        <p><span class="chip chip-ok">Installed</span>{% if model.synthetic %} <span class="chip chip-req">Trained on synthetic data</span>{% endif %} Version <code>{{ model.version }}</code></p>
         <dl class="facts">
           <dt>Trained at</dt><dd>{{ model.trained_at or "unknown" }}</dd>
           <dt>Rows used</dt><dd>{{ model.n_rows or "unknown" }}</dd>

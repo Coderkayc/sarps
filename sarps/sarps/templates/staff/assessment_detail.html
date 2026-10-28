@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Assessment | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div>
+        <h1>{{ assessment.student.full_name }}</h1>
+        <p class="muted">{{ assessment.student.matric_number }}</p>
+      </div>
+      <a href="{{ url_for('staff.student_detail', student_id=assessment.student_id) }}">All assessments for this student</a>
+    </div>
+    {% if assessment.is_flagged %}
+      <div class="notice notice-risk">Flagged: this assessment was classified At Risk.</div>
+    {% endif %}
+    {% with assessment=assessment %}{% include "_result.html" %}{% endwith %}
+    <p class="muted small">The student agreed to the sharing arrangement (wording {{ assessment.consent_version }}) when submitting this assessment.</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gauge.js') }}"></script>
+{% endblock %}

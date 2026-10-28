@@ -112,10 +112,11 @@ def demo_client(demo_file):
     ctx.pop()
 
 
-def test_every_page_warns_that_this_is_a_demo_model(demo_client):
+def test_the_site_states_plainly_that_the_training_data_is_synthetic(demo_client):
     client, app = demo_client
-    assert b"DEMO MODEL" in client.get("/").data
-    assert b"made-up (synthetic) students" in client.get("/assumptions").data
+    assert b"DEMO MODEL" not in client.get("/login").data         # no alarming banner
+    assert b"trained on synthetic data" in client.get("/assumptions").data  # but the fact is still stated
+    assert b"synthetic (generated) students" in client.get("/assumptions").data
     assert b"IUBAT" not in client.get("/assumptions").data.split(b"How each answer")[0]
 
 
@@ -126,8 +127,9 @@ def test_a_submission_works_and_the_result_is_labelled_demo(demo_client):
     response = client.post("/student/assess", data=dict(VALID_ASSESSMENT), follow_redirects=True)
     assert response.status_code == 200
     assert count_assessments() == 1
-    assert b"Demo result" in response.data
+    assert b"Demo result" not in response.data
     assert b"synthetic-demo" in response.data
+    assert b"trained on synthetic data" in response.data
 
 
 def test_the_real_model_shows_no_demo_banner(model_app, model_client):

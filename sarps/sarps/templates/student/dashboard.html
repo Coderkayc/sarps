@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_macros.html" import risk_chip %}
+{% block title %}My dashboard | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div>
+        <h1>Welcome, {{ current_user.full_name.split()[0] }}</h1>
+        <p class="muted">{{ current_user.department.name if current_user.department else "" }} · {{ current_user.matric_number }}</p>
+      </div>
+      {% if model_status().available %}
+        <a class="btn btn-primary" href="{{ url_for('student.assess') }}">New assessment</a>
+      {% else %}
+        <span class="btn btn-primary btn-disabled" aria-disabled="true">New assessment unavailable</span>
+      {% endif %}
+    </div>
+
+    {% if not model_status().available %}
+      <div class="notice notice-warn">The prediction model has not been installed yet, so new assessments cannot be submitted.</div>
+    {% endif %}
+
+    {% if latest %}
+      <h2>Latest result</h2>
+      {% with assessment=latest %}{% include "_result.html" %}{% endwith %}
+
+      {% with advice=advice %}{% include "_advice.html" %}{% endwith %}
+
+      {% if latest.is_flagged %}
+        <div class="notice notice-info">
+          This result is flagged for authorised academic staff, as you agreed when you submitted it.
+          {% if staff %}Staff who can currently see it: {{ staff|map(attribute='full_name')|join(', ') }}.
+          {% else %}No staff are currently linked to your account, so nobody can see it yet. Please contact your department.{% endif %}
+        </div>
+      {% endif %}
+
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <h2>Recent assessments</h2>
+        <a href="{{ url_for('student.history') }}">View all {{ total }}</a>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Date</th><th>Probability of Not at Risk</th><th>Result</th><th></th></tr></thead>
+          <tbody>
+          {% for a in recent %}
+            <tr>
+              <td>{{ a.created_at|dt }}</td>
+              <td>{{ a.prob_not_at_risk|pct }}</td>
+              <td>{{ risk_chip(a.risk_label) }}</td>
+              <td><a href="{{ url_for('student.result', assessment_id=a.id) }}">Open</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card empty">
+        <h2>No assessments yet</h2>
+        <p>Submit your first assessment to see your result here.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if latest %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/gauge.js') }}"></script>
+{% endif %}
+{% endblock %}

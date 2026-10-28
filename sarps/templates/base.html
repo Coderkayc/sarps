@@ -68,10 +68,6 @@
   </header>
   {% endblock %}
 
-  {% if model_status().synthetic %}
-  <div class="wrap flashes"><div class="flash flash-error" role="alert"><strong>DEMO MODEL.</strong> Predictions on this site come from a model trained on made-up (synthetic) students, not real ones. Treat every result as a demonstration only.</div></div>
-  {% endif %}
-
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="wrap flashes">
@@ -90,7 +86,7 @@
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <p><strong>{{ app_name }}</strong>: {{ app_full_name }}</p>
-      <p>Final-year university project. Predictions are estimates, not certainties. <a href="{{ url_for('main.assumptions') }}">Assumptions</a></p>
+      <p>Final-year university project. Predictions are estimates, not certainties.{% if model_status().synthetic %} The model is trained on synthetic data until real records are available.{% endif %} <a href="{{ url_for('main.assumptions') }}">Assumptions</a></p>
     </div>
   </footer>
   {% endblock %}

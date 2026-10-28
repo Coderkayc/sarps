@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Admin overview | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h1>Administrator overview</h1>
+
+    <div class="stat-row">
+      {% for label, n in stats.roles %}
+        <div class="stat"><span class="stat-num">{{ n }}</span><span class="stat-label">{{ label }}{{ "s" if n != 1 else "" }}</span></div>
+      {% endfor %}
+      <div class="stat"><span class="stat-num">{{ stats.departments }}</span><span class="stat-label">Departments</span></div>
+      <div class="stat"><span class="stat-num">{{ stats.assignments }}</span><span class="stat-label">Assignments</span></div>
+    </div>
+
+    <section class="card" aria-labelledby="model-heading">
+      <h2 id="model-heading">Prediction model</h2>
+      {% if model.available %}
+        <p><span class="chip chip-ok">Installed</span> Version <code>{{ model.version }}</code></p>
+        <dl class="facts">
+          <dt>Trained at</dt><dd>{{ model.trained_at or "unknown" }}</dd>
+          <dt>Rows used</dt><dd>{{ model.n_rows or "unknown" }}</dd>
+          {% if model.unused_features %}<dt>Inputs not used</dt><dd>{{ model.unused_features|join(", ") }}</dd>{% endif %}
+          {% if model.metrics %}
+          <dt>Accuracy (held-out test)</dt><dd>{{ model.metrics.accuracy }}</dd>
+          <dt>ROC AUC (held-out test)</dt><dd>{{ model.metrics.roc_auc }}</dd>
+          <dt>At Risk recall (held-out test)</dt><dd>{{ model.metrics.at_risk_recall }}</dd>
+          {% endif %}
+        </dl>
+      {% else %}
+        <p><span class="chip chip-risk">Not installed</span> Students cannot submit assessments yet.</p>
+        {% if model.error %}<p class="error-text">The model file could not be used: {{ model.error }}</p>{% endif %}
+        <p class="muted">Train a model from your real dataset with <code>python -m ml.train --data your_dataset.csv</code>. See <code>ml/DATASET.md</code>. The app detects the new file automatically.</p>
+      {% endif %}
+    </section>
+
+    <p>
+      <a class="btn btn-ghost" href="{{ url_for('admin.users') }}">Manage users</a>
+      <a class="btn btn-ghost" href="{{ url_for('admin.departments') }}">Departments</a>
+      <a class="btn btn-ghost" href="{{ url_for('admin.assignments') }}">Assignments</a>
+    </p>
+  </div>
+</section>
+{% endblock %}

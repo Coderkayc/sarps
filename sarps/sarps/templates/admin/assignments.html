@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, csrf, pager %}
+{% block title %}Assignments | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h1>Adviser and lecturer assignments</h1>
+    <p class="muted">An assigned adviser or lecturer can see that student's assessments. Heads of Department see their whole department automatically.</p>
+
+    <section class="card form-card" aria-labelledby="assign-heading">
+      <h2 id="assign-heading">Assign a student</h2>
+      {% if form.staff_id.choices and form.student_id.choices %}
+      <form method="post" novalidate>
+        {{ csrf() }}
+        {{ field(form.staff_id, required=True) }}
+        {{ field(form.student_id, required=True) }}
+        <button class="btn btn-primary" type="submit">Save assignment</button>
+      </form>
+      {% else %}
+        <p class="muted">You need at least one active adviser or lecturer and one active student first.</p>
+      {% endif %}
+    </section>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Staff</th><th>Role</th><th>Student</th><th></th></tr></thead>
+        <tbody>
+        {% for a in pagination.items %}
+          <tr>
+            <td>{{ a.staff.full_name }}</td>
+            <td>{{ a.staff.role_label }}</td>
+            <td>{{ a.student.full_name }} <small class="muted">{{ a.student.matric_number }}</small></td>
+            <td>
+              <form method="post" action="{{ url_for('admin.delete_assignment', assignment_id=a.id) }}" class="inline-form">
+                {{ csrf() }}
+                <button class="btn btn-ghost btn-small" type="submit">Remove</button>
+              </form>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="muted">No assignments yet.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {{ pager(pagination, 'admin.assignments') }}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% from "_macros.html" import logo %}
+{% block body_class %}layout-landing landing-page{% endblock %}
+
+{# The landing page has its own floating navigation bar instead of the app header. #}
+{% block header %}
+<div class="landing-nav-wrap">
+  <nav class="landing-nav" aria-label="Main">
+    <a class="logo-link" href="{{ url_for('main.index') }}" aria-label="{{ app_name }} home">{{ logo() }}</a>
+    <div class="landing-links">
+      <a href="#about">About</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#inputs">What you enter</a>
+      <a href="#roles">Who uses it</a>
+      <a href="#privacy">Privacy</a>
+      <a href="{{ url_for('main.assumptions') }}">Assumptions</a>
+    </div>
+    <div class="landing-actions">
+      {% if current_user.is_authenticated %}
+        <a class="btn btn-primary btn-small" href="{{ url_for('main.dashboard') }}">My dashboard</a>
+      {% else %}
+        <a class="btn btn-ghost btn-small" href="{{ url_for('auth.login') }}">Sign in</a>
+        <a class="btn btn-primary btn-small" href="{{ url_for('auth.register') }}">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+</div>
+{% endblock %}
+
+{% block content %}
+<section class="landing-hero">
+  <span class="blob blob-1" aria-hidden="true"></span>
+  <span class="blob blob-2" aria-hidden="true"></span>
+  <div class="landing-hero-inner animate-rise">
+    <p class="eyebrow">For students at {{ institution }}</p>
+    <h1>{{ app_name }}</h1>
+    <p class="tagline">Know where you stand, early enough to act.</p>
+    <p class="lead">
+      {{ app_name }} helps students check their academic risk at any point in the semester,
+      so they can act instead of react.
+    </p>
+    <div class="hero-actions">
+      {% if current_user.is_authenticated %}
+        <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Go to my dashboard</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('auth.register') }}">Create student account</a>
+        <a class="btn hero-secondary" href="{{ url_for('auth.login') }}">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section id="about" class="section">
+  <div class="wrap">
+    <div class="mb-10 grid max-w-xl gap-4">
+      <div>
+        <p class="eyebrow">About</p>
+        <h2>A gentle early warning for your semester.</h2>
+      </div>
+      <p class="lead">Check in as often as you like. Each assessment is saved, so you can see how things change.</p>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#128200;</span>
+        <h3>Quick risk assessment</h3>
+        <p>Answer a short form about attendance, assignments, tests, study habits and finances, and see your result in seconds.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#128339;</span>
+        <h3>Track your history</h3>
+        <p>Submit a new assessment whenever your situation changes and compare it with the earlier ones.</p>
+      </article>
+      <article class="feature">
+        <span class="feature-icon" aria-hidden="true">&#129309;</span>
+        <h3>Support when you need it</h3>
+        <p>If an assessment is classified At Risk, it is flagged for the academic staff authorised to see it, so help can reach you early.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works" class="section section-sky">
+  <div class="wrap">
+    <p class="eyebrow">How it works</p>
+    <h2>Three simple steps</h2>
+    <p class="section-intro">Repeatable any time during the semester.</p>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <article class="card glass">
+        <span class="step-num">1</span>
+        <h3>Enter your details</h3>
+        <p>Answer a short form about attendance, assignments, tests, study habits and finances.</p>
+      </article>
+      <article class="card glass">
+        <span class="step-num">2</span>
+        <h3>Get an assessment</h3>
+        <p>A machine-learning model estimates the probability that you are Not at Risk and labels you AT RISK or NOT AT RISK.</p>
+      </article>
+      <article class="card glass">
+        <span class="step-num">3</span>
+        <h3>Track your history</h3>
+        <p>Submit new assessments as the semester moves on and see how things change.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="inputs" class="section">
+  <div class="wrap">
+    <p class="eyebrow">What you will answer</p>
+    <h2>Five short sections, plus your CGPA if you have one</h2>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <article class="card"><h3>Class attendance</h3><p>Pick the option that best describes how often you attend.</p></article>
+      <article class="card"><h3>Assignment submission</h3><p>How many were assigned, and how many you have submitted.</p></article>
+      <article class="card"><h3>Tests and CAs</h3><p>How many you have done and how you felt you did. Your honest impression is enough.</p></article>
+      <article class="card"><h3>Study hours per week</h3><p>Pick your typical weekly study time outside class.</p></article>
+      <article class="card"><h3>Financial situation</h3><p>How comfortable you are, and how often money gets in the way.</p></article>
+      <article class="card"><h3>CGPA</h3><p>Enter it if you have one. If you do not, just say so: it is never counted as zero.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="roles" class="section section-sky">
+  <div class="wrap">
+    <p class="eyebrow">Who uses {{ app_name }}</p>
+    <h2>Each role sees only what it is allowed to see</h2>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <article class="card glass"><h3>Student</h3><p>Views only their own assessments and history.</p></article>
+      <article class="card glass"><h3>Academic adviser</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card glass"><h3>Lecturer</h3><p>Views assessments of the students assigned to them.</p></article>
+      <article class="card glass"><h3>Head of Department</h3><p>Views assessments of students in their department.</p></article>
+      <article class="card glass"><h3>Administrator</h3><p>Manages accounts and assignments. Cannot view assessments.</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="privacy" class="section">
+  <div class="wrap narrow">
+    <p class="eyebrow">Privacy</p>
+    <h2>Sharing and privacy</h2>
+    <p>
+      Before every assessment you must agree to how it is shared. If an assessment
+      is classified as At Risk, it is flagged for the academic staff authorised to
+      see it, so that support can be offered.
+    </p>
+  </div>
+</section>
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    {{ logo() }}
+    <p>&copy; {{ now_year }} {{ app_name }} &middot; {{ institution }}</p>
+  </div>
+</footer>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "_macros.html" import field, checkbox, radios, csrf %}
+{% block title %}New assessment | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap form-page wide">
+    <h1>New assessment</h1>
+    <p class="muted">Answer every question as honestly as you can. Your answers are turned into numbers the prediction model understands; the page never works out a risk score by itself.</p>
+
+    {% if not model_ready %}
+      <div class="notice notice-warn">
+        The prediction model has not been installed yet, so assessments cannot be submitted right now.
+        Nothing you enter will be saved.
+      </div>
+    {% endif %}
+
+    {% if model_ready and model_status().unused_features %}
+      <div class="notice notice-info">
+        Please still answer every question. The current model was trained on data that did not include
+        {{ unused_names|join(", ") }}, so those answers are saved and used for your advice but do not change the percentage.
+        <a href="{{ url_for('main.assumptions') }}">See what the model uses</a>.
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate class="card form-card" id="assess-form">
+      {{ csrf() }}
+
+      <fieldset>
+        <legend>1. Class attendance</legend>
+        {{ field(form.attendance_level, required=True, hint="Choose the option that best describes your attendance so far this semester.") }}
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Assignment submission</legend>
+        <div class="form-grid">
+          {{ field(form.assignments_assigned, attrs={"type": "number", "min": 0, "step": 1, "inputmode": "numeric"}, required=True) }}
+          {{ field(form.assignments_submitted, attrs={"type": "number", "min": 0, "step": 1, "inputmode": "numeric"}, required=True) }}
+        </div>
+        <p class="hint">If no assignments have been given yet, enter 0 in both boxes.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Tests and Continuous Assessments (CAs)</legend>
+        {{ field(form.tests_done, attrs={"type": "number", "min": 0, "step": 1, "inputmode": "numeric"}, required=True) }}
+        <div class="form-grid">
+          {{ field(form.tests_high, attrs={"type": "number", "min": 0, "step": 1, "inputmode": "numeric"}, required=True) }}
+          {{ field(form.tests_low, attrs={"type": "number", "min": 0, "step": 1, "inputmode": "numeric"}, required=True) }}
+        </div>
+        <p class="notice notice-info">We understand test results are not always shown to you. Answer based on how you felt your performance was &mdash; your honest perception is enough.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Study hours per week</legend>
+        {{ field(form.study_hours_level, required=True, hint="Outside scheduled classes, in a typical week.") }}
+      </fieldset>
+
+      <fieldset>
+        <legend>5. Financial situation</legend>
+        {{ field(form.financial_comfort, required=True) }}
+        {{ field(form.financial_impact, required=True) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>Your CGPA</legend>
+        {{ radios(form.has_cgpa) }}
+        <div id="cgpa-box">
+          {{ field(form.previous_cgpa, attrs={"type": "number", "step": "any", "min": 0, "max": config.CGPA_MAX, "inputmode": "decimal"}, hint="A number from 0.0 to " ~ config.CGPA_MAX ~ ".") }}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Your goal <span class="chip chip-opt">Optional</span></legend>
+        {{ field(form.target_cgpa, attrs={"type": "number", "step": "0.01", "min": 0, "max": config.CGPA_MAX, "inputmode": "decimal"}, hint="Your advice will be about reaching this, not just about avoiding risk.", optional=True) }}
+      </fieldset>
+
+      <fieldset>
+        <legend>Sharing agreement <span class="chip chip-req">Required</span></legend>
+        {{ checkbox(form.consent) }}
+      </fieldset>
+
+      <button class="btn btn-primary btn-block" type="submit" {% if not model_ready %}disabled data-model-off{% endif %}>Submit assessment</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/assess_form.js') }}"></script>
+{% endblock %}

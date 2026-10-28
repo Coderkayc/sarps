@@ -10,7 +10,7 @@
         <h1>{{ student.full_name }}</h1>
         <p class="muted">{{ student.matric_number }} · {{ student.department.name if student.department else "No department" }} · {{ student.email }}</p>
       </div>
-      <a href="{{ url_for('staff.dashboard') }}">Back to students</a>
+      <a class="link-tap" href="{{ url_for('staff.dashboard') }}">Back to students</a>
     </div>
 
     {% if assessments %}
