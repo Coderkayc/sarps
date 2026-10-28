@@ -186,7 +186,7 @@ def test_consent_is_required_before_submitting(model_app, model_client):
     ("assignments_assigned", "-1"), ("assignments_assigned", "1.5"), ("assignments_assigned", "abc"),
     ("assignments_assigned", "1001"), ("tests_done", "-2"), ("tests_done", "x"),
     ("previous_cgpa", "5.1"), ("previous_cgpa", "-0.1"), ("previous_cgpa", "nan"), ("previous_cgpa", "inf"),
-    ("has_cgpa", "maybe"), ("target_cgpa", "5.5"),
+    ("has_cgpa", "maybe"),
 ])
 def test_impossible_values_are_rejected(model_app, model_client, field, value):
     signed_in_student(model_client)

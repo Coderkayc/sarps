@@ -173,9 +173,6 @@ class AssessmentForm(FlaskForm):
         validators=[InputRequired(message="Please say whether you have a CGPA.")])
     previous_cgpa = FloatField("Your current CGPA", validators=[Optional(), finite_number])
 
-    # Optional goal
-    target_cgpa = FloatField("CGPA you are aiming for", validators=[Optional(), finite_number])
-
     consent = BooleanField(
         CONSENT_TEXT,
         validators=[DataRequired(message="You must agree to the sharing arrangement before submitting.")])
@@ -187,11 +184,6 @@ class AssessmentForm(FlaskForm):
     def validate_has_cgpa(self, field):
         if field.data not in ("yes", "no"):
             raise ValidationError("Please say whether you have a CGPA.")
-
-    def validate_target_cgpa(self, field):
-        maximum = current_app.config["CGPA_MAX"]
-        if field.data is not None and not (0 < field.data <= maximum):
-            raise ValidationError(f"Target CGPA must be above 0 and at most {maximum:g}.")
 
     def validate(self, extra_validators=None):
         valid = super().validate(extra_validators)
@@ -285,35 +277,6 @@ class CourseClaimForm(FlaskForm):
         if valid and all(f.data is None for f in (self.attendance_claimed, self.ca_claimed, self.exam_claimed)):
             self.attendance_claimed.errors = list(self.attendance_claimed.errors) + [
                 "Enter at least one figure (attendance, CA or exam)."]
-            valid = False
-        return valid
-
-
-class GoalForm(FlaskForm):
-    target_cgpa = FloatField("CGPA you are aiming for",
-                             validators=[InputRequired(message="Enter the CGPA you are aiming for."), finite_number])
-    cgpa_before_semester = FloatField("Your CGPA before this semester", validators=[Optional(), finite_number])
-    units_before_semester = IntegerField(
-        "Credit units you have completed before this semester",
-        validators=[Optional(), NumberRange(0, 400, message="Enter a number from 0 to 400.")])
-
-    def validate_target_cgpa(self, field):
-        maximum = current_app.config["CGPA_MAX"]
-        if field.data is not None and not (0 < field.data <= maximum):
-            raise ValidationError(f"Target CGPA must be above 0 and at most {maximum:g}.")
-
-    def validate_cgpa_before_semester(self, field):
-        maximum = current_app.config["CGPA_MAX"]
-        if field.data is not None and not (0 <= field.data <= maximum):
-            raise ValidationError(f"CGPA must be between 0 and {maximum:g}.")
-
-    def validate(self, extra_validators=None):
-        valid = super().validate(extra_validators)
-        has_cgpa = self.cgpa_before_semester.data is not None
-        has_units = self.units_before_semester.data not in (None, 0)
-        if valid and has_cgpa != has_units:
-            self.units_before_semester.errors = list(self.units_before_semester.errors) + [
-                "Fill in both your earlier CGPA and your completed units, or leave both blank (first semester)."]
             valid = False
         return valid
 

@@ -176,33 +176,6 @@ class CourseRecord(db.Model):
     scores_official_by = db.relationship("User", foreign_keys=[scores_official_by_id])
 
 
-class StudentGoal(db.Model):
-    """What a student is aiming for, so advice is about THEIR target and not a guess."""
-
-    __tablename__ = "student_goals"
-
-    student_id = db.Column(db.Integer, db.ForeignKey("users.id"), primary_key=True)
-    target_cgpa = db.Column(db.Double, nullable=True)
-    cgpa_before_semester = db.Column(db.Double, nullable=True)
-    units_before_semester = db.Column(db.Integer, nullable=True)
-    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow, onupdate=utcnow)
-
-
-class AssessmentMeta(db.Model):
-    """Extra facts about one assessment. A separate table so existing databases need no ALTER."""
-
-    __tablename__ = "assessment_meta"
-
-    assessment_id = db.Column(db.Integer, db.ForeignKey("assessments.id"), primary_key=True)
-    # "records" = taken from course records, "student_override" = student typed a different
-    # value than the records, "manual" = no records existed.
-    attendance_source = db.Column(db.String(20), nullable=False, default="manual")
-    attendance_records_value = db.Column(db.Double, nullable=True)
-    target_cgpa = db.Column(db.Double, nullable=True)
-
-    assessment = db.relationship("Assessment", backref=db.backref("meta", uselist=False))
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))

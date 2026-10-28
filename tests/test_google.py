@@ -190,3 +190,20 @@ def test_google_unreachable_shows_a_friendly_message_not_an_error_page(app, clie
     for path in ("/auth/google", "/auth/google/callback"):
         response = client.get(path, follow_redirects=True)
         assert response.status_code == 200 and "could not reach Google" in response.get_data(as_text=True)
+
+
+def test_behind_a_proxy_the_callback_address_is_https():
+    """On Vercel the proxy says the visitor used https; the app must believe it, or Google rejects the address."""
+    from flask import url_for
+    from config import TestConfig
+    from sarps import create_app
+    config = type("ProxyConfig", (TestConfig,), {"TRUST_PROXY": True})
+    app = create_app(config)
+
+    @app.route("/_callback_address")
+    def callback_address():
+        return url_for("auth.google_callback", _external=True)
+
+    response = app.test_client().get("/_callback_address", base_url="http://internal/",
+                                     headers={"X-Forwarded-Proto": "https", "X-Forwarded-Host": "sarps.vercel.app"})
+    assert response.get_data(as_text=True) == "https://sarps.vercel.app/auth/google/callback"

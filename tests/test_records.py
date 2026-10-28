@@ -3,7 +3,7 @@ import pytest
 from sqlalchemy import select
 
 from sarps.extensions import db
-from sarps.models import Assessment, AssessmentMeta, Course, CourseRecord, StudentGoal
+from sarps.models import Assessment, Course, CourseRecord
 from sarps.services import records as rec
 from sarps.services.plan import build_plan
 from tests.helpers import (VALID_ASSESSMENT, login, make_department, make_student, make_user)
@@ -158,65 +158,39 @@ def test_course_with_records_cannot_be_deleted_and_students_cannot_add_courses(c
 
 
 # ---------- plan ----------
-def goal_form(**overrides):
-    data = {"target_cgpa": "3.2", "cgpa_before_semester": "3.0", "units_before_semester": "20"}
-    data.update(overrides)
-    return data
-
-
-def test_plan_matches_hand_calculation(client):
+def test_plan_scenarios_match_hand_calculation(client):
     student = student_client(client)
     make_record(student, make_course("CSC 211", 3), ca_claimed=20)
     make_record(student, make_course("MTH 201", 2), ca_claimed=15)
-    client.post("/student/plan", data=goal_form())
-    goal = db.session.get(StudentGoal, student.id)
-    plan = build_plan(student.id, goal)
-    # needs (3.2*25 - 60) / 5 = 4.0, reached by 45/70 in every exam (see test_unn for the search)
-    assert plan["target"]["needed"] == 4.0 and plan["target"]["feasible"]
-    assert plan["target"]["exam_each"] == 45
-    best = plan["scenarios"][-1]  # 70/70 everywhere: A and A -> GPA 5.0, CGPA (60+25)/25 = 3.4
-    assert best["exam"] == 70 and best["gpa"] == 5.0 and best["cgpa"] == 3.4
+    plan = build_plan(student.id)
+    best = plan["scenarios"][-1]  # 70/70 everywhere: 90 = A and 85 = A, so GPA 5.0
+    assert best["exam"] == 70 and best["gpa"] == 5.0
     html = client.get("/student/plan").get_data(as_text=True)
-    assert "45/70" in html and "Course by course" in html
+    assert "Course by course" in html and "Your target" not in html
 
 
 def test_plan_final_result_when_every_exam_is_in(client):
     student = student_client(client)
     make_record(student, make_course("CSC 211", 3), ca_official=25, exam_official=50)   # 75 A
     make_record(student, make_course("MTH 201", 2), ca_official=20, exam_official=30)   # 50 C
-    client.post("/student/plan", data=goal_form(target_cgpa="3.5"))
-    plan = build_plan(student.id, db.session.get(StudentGoal, student.id))
+    plan = build_plan(student.id)
     assert plan["complete"] and plan["semester_gpa"] == 4.2          # (15 + 6) / 5
-    assert plan["cgpa_after"] == 3.24                                  # (3.0*20 + 21) / 25
-    assert plan["class_after"] == "Second Class Lower" and plan["target"]["met"] is False
 
 
-def test_plan_without_earlier_cgpa_is_treated_as_first_semester(client):
-    student = student_client(client)
-    make_record(student, make_course("CSC 211", 3), ca_official=25, exam_official=50)
-    client.post("/student/plan", data={"target_cgpa": "4.5"})
-    plan = build_plan(student.id, db.session.get(StudentGoal, student.id))
-    assert plan["first_semester_assumed"] and plan["cgpa_after"] == 5.0 and plan["target"]["met"]
-
-
-def test_goal_form_rules(client):
+def test_plan_page_is_read_only_now(client):
     student_client(client)
-    assert client.post("/student/plan", data={"target_cgpa": "5.5"}).status_code == 200
-    assert client.post("/student/plan", data={"target_cgpa": "4", "cgpa_before_semester": "3"}).status_code == 200
-    assert db.session.query(StudentGoal).count() == 0
-    assert client.post("/student/plan", data={"target_cgpa": "4"}).status_code == 302
-    assert db.session.query(StudentGoal).one().target_cgpa == 4
+    assert client.get("/student/plan").status_code == 200
+    assert client.post("/student/plan", data={"target_cgpa": "4"}).status_code == 405
 
 
 def test_missing_ca_is_reported_not_guessed(client):
     student = student_client(client)
     make_record(student, make_course(), attendance_claimed=80)
-    client.post("/student/plan", data={"target_cgpa": "4"})
-    plan = build_plan(student.id, db.session.get(StudentGoal, student.id))
-    assert plan["missing_ca"] == ["CSC 211"] and plan["scenarios"] == [] and plan["target"]["exam_each"] is None
+    plan = build_plan(student.id)
+    assert plan["missing_ca"] == ["CSC 211"] and plan["scenarios"] == []
 
 
-# ---------- the assessment form and the goal ----------
+# ---------- the assessment form ----------
 def submit(client, **overrides):
     data = dict(VALID_ASSESSMENT)
     data.update(overrides)
@@ -230,19 +204,10 @@ def test_attendance_is_a_dropdown_not_a_typed_percentage(model_client):
     assert 'name="attendance_pct"' not in html
 
 
-def test_target_cgpa_is_saved_with_the_assessment_and_as_the_students_goal(model_client):
-    student = student_client(model_client)
-    submit(model_client, target_cgpa="4.5")
-    meta = db.session.scalars(select(AssessmentMeta)).one()
-    assert meta.target_cgpa == 4.5
-    assert db.session.get(StudentGoal, student.id).target_cgpa == 4.5
-    assert model_client.get("/student/assess").get_data(as_text=True).count('value="4.5"') >= 1
-
-
-def test_target_cgpa_validation_on_assessment(model_client):
+def test_assessment_form_has_no_target_cgpa_question(model_client):
     student_client(model_client)
-    assert submit(model_client, target_cgpa="6").status_code == 200
-    assert db.session.query(Assessment).count() == 0
+    html = model_client.get("/student/assess").get_data(as_text=True)
+    assert "aiming for" not in html and 'name="target_cgpa"' not in html
 
 
 # ---------- advice ----------
@@ -250,7 +215,7 @@ def test_result_page_explains_and_advises(model_client):
     student = student_client(model_client)
     make_record(student, make_course(), ca_official=10)
     response = submit(model_client, attendance_level="1", assignments_assigned="5", assignments_submitted="1",
-                      previous_cgpa="1.8", target_cgpa="4.5")
+                      previous_cgpa="1.8")
     page = model_client.get(response.headers["Location"]).get_data(as_text=True)
     assert "What this means for you" in page and "How much to trust this" in page
     assert "below the commonly required level" in page and "Catch up on assignments" in page

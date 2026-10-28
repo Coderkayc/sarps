@@ -7,8 +7,8 @@ from sqlalchemy import func, select
 
 from sarps.constants import CONSENT_VERSION, Role
 from sarps.extensions import db
-from sarps.forms import AssessmentForm, CourseClaimForm, GoalForm
-from sarps.models import Assessment, AssessmentMeta, Course, CourseRecord, StudentGoal
+from sarps.forms import AssessmentForm, CourseClaimForm
+from sarps.models import Assessment, Course, CourseRecord
 from sarps.security import role_required
 from sarps.services.access import staff_who_can_view
 from sarps.services.advice import INPUT_WORDS, build_advice
@@ -24,19 +24,6 @@ student_bp = Blueprint("student", __name__, url_prefix="/student")
 
 def _own_assessments():
     return select(Assessment).where(Assessment.student_id == current_user.id)
-
-
-def _goal():
-    return db.session.get(StudentGoal, current_user.id)
-
-
-def _save_target(target):
-    """Remember the student's target CGPA (only when they gave one)."""
-    if target is None:
-        return
-    goal = _goal() or StudentGoal(student_id=current_user.id)
-    goal.target_cgpa = target
-    db.session.add(goal)
 
 
 def _assess_context(service, model_ready):
@@ -65,10 +52,9 @@ def advice_for(assessment):
             drivers = service.explain(features)
         except Exception:  # the explanation is a bonus: it must never stop the result from showing
             log.warning("Could not explain assessment %s", assessment.id, exc_info=True)
-    goal = _goal()
-    plan = build_plan(current_user.id, goal) if goal is not None or term_records(current_user.id) else None
+    plan = build_plan(current_user.id) if term_records(current_user.id) else None
     unused = service.status().get("unused_features", []) if features is not None else []
-    return build_advice(assessment, drivers, assessment.meta, plan, unused), drivers
+    return build_advice(assessment, drivers, plan, unused), drivers
 
 
 def chart_points(assessments):
@@ -99,11 +85,6 @@ def assess():
     service = current_app.extensions["prediction"]
     form = AssessmentForm()
     model_ready = service.is_available()
-    if request.method == "GET":
-        goal = _goal()
-        if goal is not None and goal.target_cgpa:
-            form.target_cgpa.data = goal.target_cgpa
-
     if request.method == "POST":
         # No real model means no prediction. We refuse rather than make up a number.
         if not model_ready:
@@ -149,9 +130,6 @@ def assess():
                 consent_version=CONSENT_VERSION,
             )
             db.session.add(assessment)
-            db.session.flush()
-            db.session.add(AssessmentMeta(assessment_id=assessment.id, target_cgpa=form.target_cgpa.data))
-            _save_target(form.target_cgpa.data)
             db.session.commit()
             flash("Assessment submitted.", "success")
             return redirect(url_for("student.result", assessment_id=assessment.id))
@@ -247,20 +225,9 @@ def course_delete(record_id):
     return redirect(url_for("student.courses"))
 
 
-@student_bp.route("/plan", methods=["GET", "POST"])
+@student_bp.route("/plan")
 @role_required(Role.STUDENT)
 def plan():
-    goal = _goal()
-    form = GoalForm(obj=goal)
-    if form.validate_on_submit():
-        goal = goal or StudentGoal(student_id=current_user.id)
-        goal.target_cgpa = form.target_cgpa.data
-        goal.cgpa_before_semester = form.cgpa_before_semester.data
-        goal.units_before_semester = form.units_before_semester.data
-        db.session.add(goal)
-        db.session.commit()
-        flash("Your target was saved.", "success")
-        return redirect(url_for("student.plan"))
     session_name, semester = current_term()
-    return render_template("student/plan.html", form=form, plan=build_plan(current_user.id, goal),
+    return render_template("student/plan.html", plan=build_plan(current_user.id),
                            session_name=session_name, semester=semester)

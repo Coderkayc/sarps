@@ -40,7 +40,7 @@ def _level_text(options, level):
     return option_label(options, int(round(level))) or f"level {level:.1f}"
 
 
-def build_advice(assessment, drivers, meta=None, plan=None, unused=()):
+def build_advice(assessment, drivers, plan=None, unused=()):
     """Return an ordered list of {kind, title, body}. kind: urgent, important, info or good."""
     items = []
     a = assessment
@@ -151,49 +151,13 @@ def build_advice(assessment, drivers, meta=None, plan=None, unused=()):
                 items.append(_item("urgent", f"{row['course'].code}: you have an F",
                                    "An F usually means repeating the course. Check your department's regulations "
                                    "and speak to your adviser."))
-        target = plan.get("target")
-        if target:
-            items.append(_target_item(target, plan))
         if plan.get("unverified_used"):
             items.append(_item("info", "Some figures are your own and unverified",
                                "Figures you typed yourself are marked unverified until a lecturer or the "
                                "ICT office confirms them. Official figures always replace yours."))
-    elif meta and meta.target_cgpa:
-        previous = a.previous_cgpa
-        gap = f" Your CGPA is {previous:.2f}, a gap of {meta.target_cgpa - previous:.2f}." if previous is not None else ""
-        items.append(_item("info", f"Your target is {meta.target_cgpa:.2f}",
-                           f"Add this semester's courses on the Plan page to see exactly what you need.{gap}"))
 
     # 5. Data honesty
     items.append(_item("info", "How much to trust this",
                        "The estimate comes from a model trained on student records from another university, so "
                        "treat it as a prompt to act, not a final answer. Your adviser knows your situation better."))
     return items
-
-
-def _target_item(target, plan):
-    goal = target["cgpa"]
-    if "met" in target:
-        if target["met"]:
-            return _item("good", f"Target {goal:.2f} reached",
-                         f"With these results your CGPA becomes {plan['cgpa_after']:.2f} ({plan['class_after']}).")
-        return _item("important", f"Target {goal:.2f} not reached",
-                     f"With these results your CGPA becomes {plan['cgpa_after']:.2f} ({plan['class_after']}). "
-                     "Plan which courses to improve next semester.")
-    if target["already_secured"]:
-        return _item("good", f"Target {goal:.2f} is already secured",
-                     "Even a weak semester would keep your CGPA at or above your target.")
-    if not target["feasible"]:
-        return _item("important", f"Target {goal:.2f} cannot be reached in one semester",
-                     f"You would need a semester GPA of {target['needed']:.2f}, above the maximum of {unn.MAX_POINTS:.1f}. "
-                     "Spread the climb across several semesters.")
-    if target.get("exam_each") is not None:
-        return _item("important", f"To reach {goal:.2f}, aim for about {target['exam_each']}/70 in every exam",
-                     f"You need a semester GPA of {target['needed']:.2f}. With your CA scores, an exam score of "
-                     f"{target['exam_each']} out of 70 in each course (about {target['exam_each'] / 0.7:.0f}%) gets you there.")
-    if target.get("reachable_with_exams") is False:
-        return _item("important", f"Target {goal:.2f} is out of reach this semester",
-                     f"You would need a semester GPA of {target['needed']:.2f}, but even 70/70 in every exam "
-                     "does not get you there with your current CA scores.")
-    return _item("info", f"Target {goal:.2f}",
-                 f"You need a semester GPA of {target['needed']:.2f}. Enter your CA scores to see the exam marks required.")

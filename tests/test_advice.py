@@ -9,7 +9,7 @@ from tests.helpers import login, make_assessment, make_department, make_student
 
 
 def titles(assessment, drivers=(), unused=()):
-    return [(i["kind"], i["title"]) for i in build_advice(assessment, list(drivers), None, None, unused)]
+    return [(i["kind"], i["title"]) for i in build_advice(assessment, list(drivers), None, unused)]
 
 
 def make(**changes):
@@ -48,7 +48,7 @@ def test_money_trouble_gets_a_kind_pointer_not_blame(app):
 
 
 def test_unused_inputs_are_declared_in_the_advice(app):
-    advice = build_advice(make(), [], None, None, ["assignment_submission_rate", "financial_impact"])
+    advice = build_advice(make(), [], None, ["assignment_submission_rate", "financial_impact"])
     note = next(i for i in advice if i["title"] == "Some of your answers do not change the score")
     assert "assignment submission" in note["body"] and "how often money affects participation" in note["body"]
 
