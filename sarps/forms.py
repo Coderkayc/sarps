@@ -17,7 +17,7 @@ from ml.features import (ATTENDANCE_OPTIONS, FINANCIAL_COMFORT_OPTIONS, FINANCIA
                          STUDY_HOURS_OPTIONS, valid_levels)
 from sarps.constants import CONSENT_TEXT, ROLE_LABELS, Role
 from sarps.extensions import db
-from sarps.models import Course, Department, User
+from sarps.models import Department, User
 from sarps.security import password_problems
 
 
@@ -256,40 +256,3 @@ class DepartmentForm(FlaskForm):
 class AssignmentForm(FlaskForm):
     staff_id = SelectField("Adviser or lecturer", coerce=int)
     student_id = SelectField("Student", coerce=int)
-
-
-# ---------- course records and goals ----------
-def _score_field(label, high):
-    return FloatField(label, validators=[Optional(), finite_number,
-                                          NumberRange(0, high, message=f"Enter a value from 0 to {high}.")])
-
-
-class CourseClaimForm(FlaskForm):
-    """A student's own figures for one course this semester (used when records are missing or wrong)."""
-
-    course_id = SelectField("Course", coerce=int)
-    attendance_claimed = _score_field("Your attendance in this course (%)", 100)
-    ca_claimed = _score_field("Your CA score (out of 30)", 30)
-    exam_claimed = _score_field("Your exam score (out of 70)", 70)
-
-    def validate(self, extra_validators=None):
-        valid = super().validate(extra_validators)
-        if valid and all(f.data is None for f in (self.attendance_claimed, self.ca_claimed, self.exam_claimed)):
-            self.attendance_claimed.errors = list(self.attendance_claimed.errors) + [
-                "Enter at least one figure (attendance, CA or exam)."]
-            valid = False
-        return valid
-
-
-class CourseForm(FlaskForm):
-    """Catalogue entry (administrator)."""
-
-    code = StringField("Course code", filters=[lambda v: " ".join(v.upper().split()) if isinstance(v, str) else v],
-                       validators=[DataRequired(), Length(min=3, max=20)])
-    title = StringField("Course title", filters=[_strip], validators=[DataRequired(), Length(min=3, max=150)])
-    units = IntegerField("Credit units", validators=[InputRequired(), NumberRange(1, 6, message="Units must be 1 to 6.")])
-    department_id = SelectField("Department", coerce=int)
-
-    def validate_code(self, field):
-        if db.session.scalar(select(Course.id).where(Course.code == field.data)):
-            raise ValidationError("A course with this code already exists.")

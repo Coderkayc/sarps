@@ -39,6 +39,10 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = _database_uri()
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
+    if os.environ.get("DB_SSL") == "1":
+        # Hosted MySQL services (TiDB Cloud, Aiven and others) only accept encrypted connections.
+        import certifi
+        SQLALCHEMY_ENGINE_OPTIONS = {**SQLALCHEMY_ENGINE_OPTIONS, "connect_args": {"ssl": {"ca": certifi.where()}}}
 
     # Login cookie safety. Set SESSION_COOKIE_SECURE=1 once the site uses HTTPS.
     SESSION_COOKIE_HTTPONLY = True
@@ -59,10 +63,6 @@ class Config:
     # Highest possible CGPA at your university (5.0 or 4.0). This MUST match
     # the scale used in your training dataset.
     CGPA_MAX = float(os.environ.get("CGPA_MAX", "5.0"))
-
-    # The semester the "My courses" and "Plan" pages work on. Change in .env each semester.
-    CURRENT_SESSION = os.environ.get("CURRENT_SESSION", "2026/2027")
-    CURRENT_SEMESTER = int(os.environ.get("CURRENT_SEMESTER", "1"))
 
     # Google sign-in. Create an OAuth client in Google Cloud Console (see README) and put
     # its ID and secret in .env. Without them the Google button explains it is not set up.

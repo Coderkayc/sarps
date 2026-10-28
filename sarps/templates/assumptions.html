@@ -5,34 +5,10 @@
 <section class="section">
   <div class="wrap narrow">
     <h1>Rules and assumptions</h1>
-    <p class="lead">SARPS mixes two different things. This page says which is which and lists every assumption.</p>
+    <p class="lead">SARPS estimates, from a student's own answers, whether they are at risk academically. This page lists every assumption behind that estimate.</p>
 
     <section class="card">
-      <h2>1. Exact UNN arithmetic (not a prediction)</h2>
-      <p>Grades, GPA, CGPA, degree class and "what do I need in the exam" are calculated by fixed rules. You can check them by hand.</p>
-      <div class="table-wrap">
-        <table class="table">
-          <thead><tr><th>Total score</th><th>Grade</th><th>Grade points</th></tr></thead>
-          <tbody>
-          {% for low, letter, points in bands %}<tr><td>{{ low }} and above</td><td>{{ letter }}</td><td>{{ points }}</td></tr>{% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <p>Continuous assessment (CA) is out of 30 and the exam out of 70. Degree classes: {% for low, name in classes %}{{ name }} from {{ "%.2f"|format(low) }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
-      <p class="muted small">Source: the UNN Faculty of Arts page <a href="https://arts.unn.edu.ng/?p=271">arts.unn.edu.ng/?p=271</a> (grade bands, CA/exam split, degree classes).</p>
-      <h3>Assumed, not confirmed</h3>
-      <ul class="plain-list">
-        <li>Grade points A=5, B=4, C=3, D=2, E=1, F=0. The page above only shows A, C, D and E.</li>
-        <li>Every course is marked CA out of 30 and exam out of 70.</li>
-        <li>GPA and CGPA are weighted by credit units and rounded half up to two decimals; half marks round up.</li>
-        <li>Computer Science uses the same scale as the Faculty of Arts page.</li>
-        <li>The current semester is set by the administrator, not detected automatically.</li>
-        <li>"About 75% attendance to sit exams" is mentioned in advice as a commonly required level. It has not been confirmed for UNN.</li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <h2>2. The prediction model (machine learning)</h2>
+      <h2>1. The prediction model (machine learning)</h2>
       {% if model.available %}
         <p>Model version <code>{{ model.version }}</code>, trained on {{ model.n_rows }} students.</p>
       {% else %}
@@ -71,12 +47,17 @@
         </table>
       </div>
       {% if unused %}<p><strong>Answers the current model ignores:</strong> they are still saved and used for your advice, but they do not move the percentage, because the training data did not contain them.</p>{% endif %}
-      <p>Test and CA answers are your own impression, not official marks. Course CA and exam scores on the Courses page are used only for the exact arithmetic in section 1.</p>
+      <p>Test and CA answers are your own impression, not official marks.</p>
     </section>
 
     <section class="card">
-      <h2>3. Whose figures count</h2>
-      <p>Course figures on the Courses page are used for the plan arithmetic only. A figure you type yourself is labelled unverified. The system is built so that an official figure (from a lecturer, the ICT office or a class rep) would always replace yours and differences would be flagged, but <strong>staff entry of official figures is not built yet</strong>, so at the moment every figure there is your own.</p>
+      <h2>2. Assumed, not confirmed</h2>
+      <ul class="plain-list">
+        <li>Every answer is the student's own report. SARPS does not receive official attendance, CA or exam records, so none of them is verified.</li>
+        <li>"About 75% attendance to sit exams" is mentioned in the advice as a commonly required level. It has not been confirmed for UNN.</li>
+        <li>CA is taken as 30 of the 100 marks in each course.</li>
+        <li>Advice sentences come from fixed rules that quote the student's own answers. Nothing in them is generated freely.</li>
+      </ul>
     </section>
   </div>
 </section>

@@ -7,15 +7,13 @@ from sqlalchemy import func, select
 
 from sarps.constants import CONSENT_VERSION, Role
 from sarps.extensions import db
-from sarps.forms import AssessmentForm, CourseClaimForm
-from sarps.models import Assessment, Course, CourseRecord
+from sarps.forms import AssessmentForm
+from sarps.models import Assessment
 from sarps.security import role_required
 from sarps.services.access import staff_who_can_view
 from sarps.services.advice import INPUT_WORDS, build_advice
 from sarps.services.classification import classify
-from sarps.services.plan import build_plan
 from sarps.services.prediction import PredictionError
-from sarps.services.records import course_row, current_term, term_records
 from ml.features import features_from_inputs
 
 log = logging.getLogger(__name__)
@@ -52,9 +50,8 @@ def advice_for(assessment):
             drivers = service.explain(features)
         except Exception:  # the explanation is a bonus: it must never stop the result from showing
             log.warning("Could not explain assessment %s", assessment.id, exc_info=True)
-    plan = build_plan(current_user.id) if term_records(current_user.id) else None
     unused = service.status().get("unused_features", []) if features is not None else []
-    return build_advice(assessment, drivers, plan, unused), drivers
+    return build_advice(assessment, drivers, unused), drivers
 
 
 def chart_points(assessments):
@@ -160,74 +157,3 @@ def history():
         _own_assessments().order_by(Assessment.created_at.desc(), Assessment.id.desc()).limit(50)))
     chart_rows.reverse()
     return render_template("student/history.html", pagination=pagination, chart=chart_points(chart_rows))
-
-
-# ---------- course records, plan ----------
-def _claim_form():
-    form = CourseClaimForm()
-    form.course_id.choices = [(c.id, c.label) for c in
-                              db.session.scalars(select(Course).order_by(Course.code))]
-    return form
-
-
-def _owned_record(record_id):
-    record = db.session.get(CourseRecord, record_id)
-    if record is None or record.student_id != current_user.id:
-        abort(404)  # someone else's record "does not exist"
-    return record
-
-
-@student_bp.route("/courses", methods=["GET", "POST"])
-@role_required(Role.STUDENT)
-def courses():
-    session_name, semester = current_term()
-    form = _claim_form()
-    if not form.course_id.choices:
-        flash("No courses have been added yet. Ask the administrator to add the course list.", "info")
-    if form.validate_on_submit():
-        course = db.session.get(Course, form.course_id.data)
-        if course is None:
-            abort(400)
-        record = db.session.scalar(select(CourseRecord).where(
-            CourseRecord.student_id == current_user.id, CourseRecord.course_id == course.id,
-            CourseRecord.session == session_name, CourseRecord.semester == semester))
-        if record is None:
-            record = CourseRecord(student_id=current_user.id, course_id=course.id,
-                                  session=session_name, semester=semester)
-        # Only fields the student filled in are changed.
-        for field in ("attendance_claimed", "ca_claimed", "exam_claimed"):
-            value = getattr(form, field).data
-            if value is not None:
-                setattr(record, field, value)
-        db.session.add(record)
-        db.session.commit()
-        flash(f"Saved your figures for {course.code}.", "success")
-        return redirect(url_for("student.courses"))
-    rows = [course_row(r) for r in term_records(current_user.id)]
-    return render_template("student/courses.html", form=form, rows=rows,
-                           session_name=session_name, semester=semester)
-
-
-@student_bp.route("/courses/<int:record_id>/delete", methods=["POST"])
-@role_required(Role.STUDENT)
-def course_delete(record_id):
-    record = _owned_record(record_id)
-    has_official = any(getattr(record, f"{f}_official") is not None for f in ("attendance", "ca", "exam"))
-    if has_official:
-        # Official figures stay; the student can only withdraw their own claims.
-        record.attendance_claimed = record.ca_claimed = record.exam_claimed = None
-        db.session.commit()
-        flash("Your own figures were removed. Official figures are kept.", "success")
-    else:
-        db.session.delete(record)
-        db.session.commit()
-        flash("Course removed from your list.", "success")
-    return redirect(url_for("student.courses"))
-
-
-@student_bp.route("/plan")
-@role_required(Role.STUDENT)
-def plan():
-    session_name, semester = current_term()
-    return render_template("student/plan.html", plan=build_plan(current_user.id),
-                           session_name=session_name, semester=semester)

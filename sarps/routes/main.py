@@ -22,6 +22,4 @@ def dashboard():
 def assumptions():
     """A public page listing every rule and assumption the system relies on."""
     from flask import current_app
-    from sarps import unn
-    return render_template("assumptions.html", bands=unn.GRADE_BANDS, classes=unn.DEGREE_CLASSES,
-                           model=current_app.extensions["prediction"].status())
+    return render_template("assumptions.html", model=current_app.extensions["prediction"].status())

@@ -5,11 +5,12 @@ Nothing is generated freely, so nothing can be invented. Rules that depend on an
 assumption say so in the text.
 """
 from ml.features import (ATTENDANCE_OPTIONS, STUDY_HOURS_OPTIONS, option_label)
-from sarps import unn
 
 # A commonly required minimum for sitting exams in Nigerian universities. NOT confirmed
 # for UNN, so the advice words it as "commonly required".
 ATTENDANCE_COMMON_MINIMUM = 75
+# Continuous assessment is 30 of the 100 marks in a course (assumed from the UNN faculty page).
+CA_MAX = 30
 FEATURE_WORDS = {
     "attendance_level": "class attendance",
     "previous_cgpa": "previous CGPA",
@@ -40,7 +41,7 @@ def _level_text(options, level):
     return option_label(options, int(round(level))) or f"level {level:.1f}"
 
 
-def build_advice(assessment, drivers, plan=None, unused=()):
+def build_advice(assessment, drivers, unused=()):
     """Return an ordered list of {kind, title, body}. kind: urgent, important, info or good."""
     items = []
     a = assessment
@@ -67,7 +68,7 @@ def build_advice(assessment, drivers, plan=None, unused=()):
             items.append(_item("important", "Your CGPA is holding the score down",
                                f"Your CGPA of {d['value']:.2f} is below the average of "
                                f"{d['typical']:.2f} in the data the model learned from. You cannot change "
-                               "the past, but a strong semester raises it (see your plan)."))
+                               "the past, but a strong semester raises it."))
         elif d["name"] == "attendance_level":
             items.append(_item("important", "Attendance is the main thing you can change",
                                f"You said you attend: {_level_text(ATTENDANCE_OPTIONS, d['value'])}. The students the model "
@@ -112,12 +113,12 @@ def build_advice(assessment, drivers, plan=None, unused=()):
             items.append(_item("important", "Catch up on assignments",
                                f"You have submitted {a.assignments_submitted} of {a.assignments_assigned} assignments "
                                f"({rate:.0f}%). Assignments usually feed into your continuous assessment, which is "
-                               f"{unn.CA_MAX} of the 100 marks in each course."))
+                               f"{CA_MAX} of the 100 marks in each course."))
     if a.tests_done:
         if a.tests_low * 2 >= a.tests_done:
             items.append(_item("important", "Your tests and CAs are worrying you",
                                f"You feel you scored below 50% in {a.tests_low} of {a.tests_done} tests or CAs. "
-                               f"CA is {unn.CA_MAX} of the 100 marks, so ask your lecturers for your actual marks "
+                               f"CA is {CA_MAX} of the 100 marks, so ask your lecturers for your actual marks "
                                "and a plan to recover marks in the exam."))
         elif a.tests_high * 2 >= a.tests_done:
             items.append(_item("good", "Your tests and CAs are going well",
@@ -132,31 +133,7 @@ def build_advice(assessment, drivers, plan=None, unused=()):
                            f"The current model was trained on data that did not include: {names}. "
                            "Your answers are saved and used for the advice above, but they do not move the percentage."))
 
-    # 4. Course by course, from the semester plan
-    if plan and plan.get("has_courses"):
-        for row in plan.get("pending", []):
-            code = row["course"].code
-            if row["ca"] is None:
-                continue
-            needs = dict(row["needs"] or [])
-            if needs.get("E") is None:
-                items.append(_item("urgent", f"{code}: a pass is out of reach on current marks",
-                                   f"With a CA of {row['ca']:g}/{unn.CA_MAX}, even full marks in the exam "
-                                   "would not reach the 40 needed to pass. Ask your lecturer and adviser what options exist."))
-            elif needs["E"] >= 30:
-                items.append(_item("important", f"{code}: you need {needs['E']}/70 in the exam just to pass",
-                                   f"Your CA is {row['ca']:g}/{unn.CA_MAX}. Put extra revision time into this course."))
-        for row in plan.get("finished", []):
-            if row["grade"] == "F":
-                items.append(_item("urgent", f"{row['course'].code}: you have an F",
-                                   "An F usually means repeating the course. Check your department's regulations "
-                                   "and speak to your adviser."))
-        if plan.get("unverified_used"):
-            items.append(_item("info", "Some figures are your own and unverified",
-                               "Figures you typed yourself are marked unverified until a lecturer or the "
-                               "ICT office confirms them. Official figures always replace yours."))
-
-    # 5. Data honesty
+    # 4. Data honesty
     items.append(_item("info", "How much to trust this",
                        "The estimate comes from a model trained on student records from another university, so "
                        "treat it as a prompt to act, not a final answer. Your adviser knows your situation better."))
