@@ -51,6 +51,11 @@ class Config:
         "MODEL_PATH", str(BASE_DIR / "ml" / "models" / "sarps_model.joblib")
     )
 
+    # Behind a hosting proxy (Vercel, Render, nginx) the app must trust the proxy's "this was https"
+    # header, or Google sign-in builds an http:// callback address and Google rejects it.
+    # Vercel sets VERCEL automatically; on other hosts set TRUST_PROXY=1.
+    TRUST_PROXY = os.environ.get("TRUST_PROXY") == "1" or bool(os.environ.get("VERCEL"))
+
     # Highest possible CGPA at your university (5.0 or 4.0). This MUST match
     # the scale used in your training dataset.
     CGPA_MAX = float(os.environ.get("CGPA_MAX", "5.0"))
