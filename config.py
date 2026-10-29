@@ -36,7 +36,7 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
     if os.environ.get("DB_SSL") == "1":
         import certifi
-    SQLALCHEMY_ENGINE_OPTIONS = {**SQLALCHEMY_ENGINE_OPTIONS, "connect_args": {"ssl": {"ca": certifi.where()}}}
+        SQLALCHEMY_ENGINE_OPTIONS = {**SQLALCHEMY_ENGINE_OPTIONS, "connect_args": {"ssl": {"ca": certifi.where()}}}
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE") == "1"
