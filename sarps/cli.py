@@ -1,4 +1,4 @@
-"""Terminal commands for setting things up. Run them with `flask --app app <command>`."""
+""""""
 import click
 from sqlalchemy import select
 
@@ -12,7 +12,7 @@ from sarps.security import password_problems
 def register_commands(app):
     @app.cli.command("init-db")
     def init_db():
-        """Create missing tables and add any new columns (safe to run again; it never deletes data)."""
+        """"""
         db.create_all()
         for line in upgrade_schema():
             click.echo(f"Upgrade: {line}")
@@ -21,7 +21,7 @@ def register_commands(app):
     @app.cli.command("add-department")
     @click.argument("name")
     def add_department(name):
-        """Add a department, e.g.  flask --app app add-department "Computer Science"."""
+        """"""
         name = name.strip()
         if not name:
             raise click.ClickException("Department name cannot be empty.")
@@ -36,7 +36,7 @@ def register_commands(app):
     @click.option("--email", prompt="Email")
     @click.password_option("--password", prompt="Password")
     def create_admin(name, email, password):
-        """Create the first administrator account."""
+        """"""
         email = email.strip().lower()
         problems = password_problems(password, app.config["MIN_PASSWORD_LENGTH"])
         if problems:

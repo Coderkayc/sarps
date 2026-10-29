@@ -23,7 +23,7 @@ class Department(db.Model):
 
 
 class User(UserMixin, db.Model):
-    """Everyone who can sign in: students, staff and administrators."""
+    """"""
 
     __tablename__ = "users"
 
@@ -35,13 +35,11 @@ class User(UserMixin, db.Model):
     department_id = db.Column(db.Integer, db.ForeignKey("departments.id"), nullable=True)
     matric_number = db.Column(db.String(40), unique=True, nullable=True)
     active = db.Column(db.Boolean, nullable=False, default=True)
-    # Google's permanent id for this person, set the first time they sign in with Google.
     google_sub = db.Column(db.String(64), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
 
     department = db.relationship("Department")
 
-    # Flask-Login asks every user object whether the account may sign in.
     @property
     def is_active(self):
         return bool(self.active)
@@ -65,7 +63,7 @@ class User(UserMixin, db.Model):
 
 
 class StaffAssignment(db.Model):
-    """Links an adviser or lecturer to a student they are authorised to see."""
+    """"""
 
     __tablename__ = "staff_assignments"
     __table_args__ = (db.UniqueConstraint("staff_id", "student_id", name="uq_staff_student"),)
@@ -80,7 +78,7 @@ class StaffAssignment(db.Model):
 
 
 class Assessment(db.Model):
-    """One submitted assessment: the inputs, the model's output and the consent given."""
+    """"""
 
     __tablename__ = "assessments"
 
@@ -88,33 +86,28 @@ class Assessment(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow, index=True)
 
-    # Inputs, exactly as the student answered. Levels are the numbers defined in ml/features.py.
-    attendance_level = db.Column(db.Integer, nullable=True)           # 0-6 (dropdown)
+    attendance_level = db.Column(db.Integer, nullable=True)           
     assignments_assigned = db.Column(db.Integer, nullable=True)
     assignments_submitted = db.Column(db.Integer, nullable=True)
     tests_done = db.Column(db.Integer, nullable=True)
-    tests_high = db.Column(db.Integer, nullable=True)                 # felt they scored above 70%
-    tests_low = db.Column(db.Integer, nullable=True)                  # felt they scored below 50%
-    study_hours_level = db.Column(db.Integer, nullable=True)          # 0-9 (dropdown)
-    financial_comfort = db.Column(db.Integer, nullable=True)          # 1-5
-    financial_impact = db.Column(db.Integer, nullable=True)           # 1-5
+    tests_high = db.Column(db.Integer, nullable=True)                 
+    tests_low = db.Column(db.Integer, nullable=True)                  
+    study_hours_level = db.Column(db.Integer, nullable=True)          
+    financial_comfort = db.Column(db.Integer, nullable=True)          
+    financial_impact = db.Column(db.Integer, nullable=True)           
     previous_cgpa = db.Column(db.Double, nullable=True)
     cgpa_unavailable = db.Column(db.Boolean, nullable=False, default=False)
 
-    # Older assessments (made before the inputs were redesigned) used these columns.
-    # New assessments leave them empty. They are kept so old results can still be shown.
     attendance_pct = db.Column(db.Double, nullable=True)
     assignment_completion_pct = db.Column(db.Double, nullable=True)
     financial_capability = db.Column(db.String(10), nullable=True)
     study_hours_per_week = db.Column(db.Double, nullable=True)
 
-    # Output of the trained model (percent, 0 to 100, two decimals).
     prob_not_at_risk = db.Column(db.Double, nullable=False)
     risk_label = db.Column(db.String(20), nullable=False)
     is_flagged = db.Column(db.Boolean, nullable=False, default=False, index=True)
     model_version = db.Column(db.String(80), nullable=False)
 
-    # Proof the student agreed to the sharing arrangement before submitting.
     consent_given = db.Column(db.Boolean, nullable=False)
     consent_version = db.Column(db.String(20), nullable=False)
 

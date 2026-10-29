@@ -1,25 +1,14 @@
-"""Plain-language advice for a student, built from their own answers.
-
-Every sentence below comes from a fixed rule and cites the answer it is based on.
-Nothing is generated freely, so nothing can be invented. Rules that depend on an
-assumption say so in the text.
+"""
 """
 from ml.features import (ATTENDANCE_OPTIONS, STUDY_HOURS_OPTIONS, option_label)
-
-# A commonly required minimum for sitting exams in Nigerian universities. NOT confirmed
-# for UNN, so the advice words it as "commonly required".
 ATTENDANCE_COMMON_MINIMUM = 75
-# Continuous assessment is 30 of the 100 marks in a course (assumed from the UNN faculty page).
 CA_MAX = 30
 FEATURE_WORDS = {
     "attendance_level": "class attendance",
     "previous_cgpa": "previous CGPA",
     "study_hours_level": "weekly study hours",
 }
-# Inputs we never turn into "fix this" advice: not something a student can change this
-# semester, or only a proxy in the training data.
 NOT_ACTIONABLE = {"financial_comfort", "financial_impact"}
-# Plain names for the model inputs, used when saying which answers do not change the score.
 INPUT_WORDS = {
     "attendance_level": "class attendance",
     "assignment_submission_rate": "assignment submission",
@@ -37,18 +26,17 @@ def _item(kind, title, body):
 
 
 def _level_text(options, level):
-    """The dropdown wording for the nearest whole level, e.g. 'Often (61\u201380%)'."""
+    """"""
     return option_label(options, int(round(level))) or f"level {level:.1f}"
 
 
 def build_advice(assessment, drivers, unused=()):
-    """Return an ordered list of {kind, title, body}. kind: urgent, important, info or good."""
+    """"""
     items = []
     a = assessment
     prob = a.prob_not_at_risk
     at_risk = a.risk_label == "At Risk"
 
-    # 1. What the number means
     if at_risk:
         closeness = ("This is close to the 50% line, so a few good weeks could change it. "
                      if prob >= 40 else "")
@@ -61,7 +49,6 @@ def build_advice(assessment, drivers, unused=()):
         items.append(_item("good", "You are currently Not at Risk",
                            f"Your Not at Risk score is {prob:.1f}%, above the 50% line.{close}"))
 
-    # 2. The biggest things pulling the score down or up (actionable inputs only)
     pulls = [d for d in drivers if d["name"] not in NOT_ACTIONABLE and d["contribution"] < -0.05]
     for d in pulls[:2]:
         if d["name"] == "previous_cgpa":
@@ -96,7 +83,6 @@ def build_advice(assessment, drivers, unused=()):
         items.append(_item("good", f"Your {FEATURE_WORDS.get(d['name'], d['name'])} is helping",
                            f"{detail}, which raises your score."))
 
-    # 3. Rules that depend only on the student's own answers
     if a.attendance_level is not None and a.attendance_level <= 3:
         items.append(_item("urgent", "Attendance is below the commonly required level",
                            f"Many Nigerian universities require about {ATTENDANCE_COMMON_MINIMUM}% attendance to sit exams. "

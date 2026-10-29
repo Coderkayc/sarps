@@ -1,15 +1,3 @@
-"""Wrap the standalone synthetic-data model so the website can load it.
-
-Usage (from the project folder, with the project's .venv active):
-
-    python -m ml.import_external_model "C:/Users/hp/Downloads/sarps_model/sarps_model/model"
-
-It reads sarps_model.pkl, sarps_scaler.pkl, sarps_imputer.pkl and model_metadata.json from that
-folder and writes ml/models/sarps_demo_model.joblib. It does NOT touch the real model
-(ml/models/sarps_model.joblib). To switch the website to the demo model, see the README.
-
-Only run this on files YOU trained: .pkl files can run code when they are opened.
-"""
 import argparse
 import json
 import pickle
@@ -54,7 +42,6 @@ def build_bundle(folder):
         "unused_features": [],
         "cgpa_max": 5.0,
         "synthetic": True,
-        # Scores measured on the SAME made-up data: they show the code works, nothing more.
         "metrics": {"accuracy": chosen_scores.get("accuracy"), "roc_auc": None,
                     "at_risk_recall": chosen_scores.get("recall")},
     }
@@ -65,8 +52,6 @@ def main(argv=None):
     parser.add_argument("folder", help="the standalone model folder (the one holding the .pkl files)")
     args = parser.parse_args(argv)
     bundle = build_bundle(args.folder)
-
-    # Prove it works before saving: a weak student and a strong student through the real SARPS inputs.
     weak = features_from_inputs(1, 10, 2, 5, 0, 4, 1, 1, 1, 1.5)
     strong = features_from_inputs(6, 10, 10, 5, 5, 0, 7, 5, 1, 4.6)
     p = bundle["pipeline"].predict_proba(to_frame([weak, strong]))[:, 1] * 100

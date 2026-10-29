@@ -1,12 +1,8 @@
-// Semicircular probability meter, drawn with Chart.js.
-// The exact percentage is always printed as text beside it, so the meter
-// never carries meaning on its own.
 (function () {
   if (typeof Chart === "undefined") return;
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Draws a short line at the 50% point (top centre of the arc): the At Risk / Not at Risk boundary.
   var thresholdMark = {
     id: "thresholdMark",
     afterDatasetsDraw: function (chart) {

@@ -1,11 +1,7 @@
-// Assessment form helpers. The server re-checks everything; this only saves the student a round trip.
-//  1. Show the CGPA box only when "Yes, I have my current CGPA" is chosen.
-//  2. Check, as the student types, that counts make sense (submitted <= assigned, and so on).
 (function () {
   var form = document.getElementById("assess-form");
   if (!form) return;
 
-  // ---- 1. CGPA box ----
   var cgpaBox = document.getElementById("cgpa-box");
   var cgpaInput = document.getElementById("previous_cgpa");
   var radios = form.querySelectorAll('input[name="has_cgpa"]');
@@ -21,7 +17,6 @@
   radios.forEach(function (radio) { radio.addEventListener("change", syncCgpa); });
   syncCgpa();
 
-  // ---- 2. Live checks on the counts ----
   var submit = form.querySelector('button[type="submit"]');
   var modelOff = submit && submit.hasAttribute("data-model-off");
   function num(id) {

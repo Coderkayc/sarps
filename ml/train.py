@@ -1,17 +1,3 @@
-"""Train the SARPS model from YOUR real dataset.
-
-    python -m ml.train --data path/to/your_dataset.csv
-
-What it does, in plain words:
-  1. Reads your CSV and checks it carefully (see ml/DATASET.md for the format).
-  2. Sets aside 20% of the students as a "test set" the model never sees while learning.
-  3. Teaches the model on the other 80%, then scores it on the test set.
-  4. Prints honest results, including how many At Risk students it catches.
-  5. Re-teaches the final model on all rows and saves it for the web app.
-
-The saved file goes to ml/models/sarps_model.joblib. The web app notices it
-automatically; you do not have to change any code.
-"""
 import argparse
 import hashlib
 import json
@@ -37,7 +23,6 @@ from ml.features import FEATURE_COLUMNS, LABEL_COLUMN
 import joblib
 import warnings
 
-# Expected when --unused is used: that column is intentionally empty.
 warnings.filterwarnings("ignore", message="Skipping features without any observed values")
 
 DEFAULT_OUT = Path(__file__).resolve().parent / "models" / "sarps_model.joblib"
@@ -46,26 +31,18 @@ MIN_PER_CLASS = 10
 
 
 class DatasetError(Exception):
-    """The dataset has a problem the user must fix. The message says what."""
+    """"""
 
-
-# Allowed range for each model input. Anything outside is a data mistake, so we stop
-# instead of guessing. Levels must also be whole numbers.
 LEVEL_RANGES = {
     "attendance_level": (0, 6), "study_hours_level": (0, 9),
     "financial_comfort": (1, 5), "financial_impact": (1, 5),
 }
 RATE_COLUMNS = ["assignment_submission_rate", "ca_high_rate", "ca_low_rate"]
-# Inputs that must be present in every training row (unless listed in --unused).
 REQUIRED_INPUTS = ["attendance_level"]
 
 
 def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
-    """Read the CSV, validate it, and return (features DataFrame, labels Series, notes).
-
-    `unused` lists input columns the dataset does not really contain (for example
-    assignment submission). They are blanked out so the model cannot learn from
-    them, and they are not required to be filled in.
+    """
     """
     unused = list(unused)
     unknown = [c for c in unused if c not in FEATURE_COLUMNS]
@@ -73,7 +50,6 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
         raise DatasetError(f"Unknown column(s) in --unused: {', '.join(unknown)}.")
     paths = [csv_path] if isinstance(csv_path, (str, Path)) else list(csv_path)
     try:
-        # Several files are stacked one under the other, so new rows can be added over time.
         raw = pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
     except Exception as exc:
         raise DatasetError(f"Could not read the CSV file: {exc}")
@@ -93,7 +69,6 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
         df[col] = np.nan
         notes.append(f"'{col}' is not in this dataset. The model does not use it.")
 
-    # Convert text to numbers. Anything unreadable becomes blank (NaN) and is reported.
     for col in FEATURE_COLUMNS + [LABEL_COLUMN]:
         before = df[col].notna().sum()
         df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -101,7 +76,6 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
         if lost:
             notes.append(f"{lost} unreadable value(s) in '{col}' were treated as blank.")
 
-    # Labels must be exactly 0 or 1.
     unlabeled = int(df[LABEL_COLUMN].isna().sum())
     if unlabeled:
         notes.append(f"Dropped {unlabeled} row(s) with no outcome label.")
@@ -109,14 +83,12 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
     if not df[LABEL_COLUMN].isin([0, 1]).all():
         raise DatasetError(f"'{LABEL_COLUMN}' must contain only 0 or 1 (1 = Not at Risk, 0 = At Risk).")
 
-    # The required inputs must be present.
     required = [c for c in REQUIRED_INPUTS if c not in unused]
     required_blank = df[required].isna().any(axis=1) if required else pd.Series(False, index=df.index)
     if required_blank.any():
         notes.append(f"Dropped {int(required_blank.sum())} row(s) missing a required input ({', '.join(required)}).")
         df = df[~required_blank]
 
-    # Impossible values mean the data has a mistake. Stop instead of guessing.
     problems = []
     for col, (low, high) in LEVEL_RANGES.items():
         values = df[col].dropna()
@@ -146,7 +118,7 @@ def load_and_check_dataset(csv_path, cgpa_max=5.0, unused=()):
 
 
 def build_pipeline(algorithm="logistic", balanced=False, seed=42):
-    """Missing values are filled with the median, and the model is told which were missing."""
+    """"""
     weight = "balanced" if balanced else None
     if algorithm == "logistic":
         classifier = LogisticRegression(max_iter=1000, class_weight=weight)
@@ -161,7 +133,7 @@ def build_pipeline(algorithm="logistic", balanced=False, seed=42):
 
 
 def evaluate(pipeline, x_test, y_test):
-    """Score on unseen students, using the same rule as the app (above 50% = Not at Risk)."""
+    """"""
     proba = pipeline.predict_proba(x_test)[:, 1]
     predicted = (proba > 0.5).astype(int)
     tn, fp, fn, tp = confusion_matrix(y_test, predicted, labels=[0, 1]).ravel()
@@ -182,7 +154,7 @@ def evaluate(pipeline, x_test, y_test):
 
 def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=False,
                 test_size=0.2, seed=42, cgpa_max=5.0, unused=(), synthetic=False):
-    """Run the whole training procedure. Returns the saved bundle."""
+    """"""
     x, y, notes = load_and_check_dataset(csv_path, cgpa_max=cgpa_max, unused=unused)
 
     x_train, x_test, y_train, y_test = train_test_split(
@@ -192,7 +164,6 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
     pipeline.fit(x_train, y_train)
     metrics = evaluate(pipeline, x_test, y_test)
 
-    # Cross-validation gives a steadier estimate than a single split.
     folds = int(min(5, y.value_counts().min()))
     if folds >= 2:
         scores = cross_val_score(build_pipeline(algorithm, balanced, seed), x, y,
@@ -202,7 +173,6 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
         metrics["cv_roc_auc_std"] = round(float(scores.std()), 4)
         metrics["cv_folds"] = folds
 
-    # Final model learns from every row, so no student's data is wasted.
     final = build_pipeline(algorithm, balanced, seed)
     final.fit(x, y)
 
@@ -215,7 +185,6 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
         "unused_features": list(unused),
         "cgpa_max": cgpa_max,
         "positive_class": "not_at_risk",
-        # "synthetic-" in the version makes every result page say it came from made-up data.
         "model_version": f"{'synthetic-' if synthetic else ''}{algorithm}-{stamp:%Y%m%d-%H%M%S}-{data_hash}",
         "synthetic": bool(synthetic),
         "trained_at": stamp.isoformat(),
@@ -232,7 +201,7 @@ def train_model(csv_path, out_path=DEFAULT_OUT, algorithm="logistic", balanced=F
     out_path.parent.mkdir(parents=True, exist_ok=True)
     temp = out_path.with_suffix(".tmp")
     joblib.dump(bundle, temp)
-    os.replace(temp, out_path)  # swap in one step so the app never reads a half-written file
+    os.replace(temp, out_path)
     report = {k: v for k, v in bundle.items() if k != "pipeline"}
     out_path.with_suffix(".json").write_text(json.dumps(report, indent=2))
     return bundle

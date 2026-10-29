@@ -1,5 +1,3 @@
-// Password fields: show/hide button and the live requirements checklist.
-// The rules here only guide the person while typing; the server checks them again.
 (function () {
   document.querySelectorAll(".password-toggle").forEach(function (button) {
     var input = document.getElementById(button.getAttribute("data-toggle-for"));

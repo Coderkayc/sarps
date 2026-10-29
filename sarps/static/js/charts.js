@@ -1,5 +1,3 @@
-// History line chart: probability of Not at Risk over time, with the 50% line.
-// The same numbers are in the table on the page, so the chart is a convenience.
 (function () {
   if (typeof Chart === "undefined") return;
   var canvas = document.getElementById("history-chart");
@@ -21,7 +19,6 @@
           borderColor: "#5f67b0",
           tension: 0.25,
           pointRadius: 6,
-          // Colour AND shape: circle = Not at Risk, triangle = At Risk.
           pointBackgroundColor: data.values.map(function (v) { return v > 50 ? ok : risk; }),
           pointStyle: data.values.map(function (v) { return v > 50 ? "circle" : "triangle"; })
         },

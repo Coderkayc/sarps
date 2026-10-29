@@ -1,7 +1,4 @@
-"""Forms. Each form lists its fields and the rules the server enforces.
-
-Browser-side hints (like min and max) are only a convenience. These rules are
-the real protection, because a browser can be bypassed.
+"""F
 """
 import math
 
@@ -21,7 +18,6 @@ from sarps.models import Department, User
 from sarps.security import password_problems
 
 
-# ---------- small helpers ----------
 def _strip(value):
     return value.strip() if isinstance(value, str) else value
 
@@ -35,7 +31,7 @@ def _clean_matric(value):
 
 
 def finite_number(form, field):
-    """Reject 'nan' and 'inf', which Python would otherwise accept as numbers."""
+    """"""
     if field.data is not None and not math.isfinite(field.data):
         raise ValidationError("Enter a valid number.")
 
@@ -50,12 +46,9 @@ def _email_not_taken(form, field):
     if db.session.scalar(select(User.id).where(User.email == field.data)):
         raise ValidationError("An account with this email already exists.")
 
-
-# ---------- sign in / registration ----------
 class LoginForm(FlaskForm):
     email = StringField("Email", filters=[_clean_email], validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
-
 
 class StudentRegistrationForm(FlaskForm):
     full_name = StringField("Full name", filters=[_strip],
@@ -75,7 +68,7 @@ class StudentRegistrationForm(FlaskForm):
 
 
 class GoogleProfileForm(FlaskForm):
-    """Asked once, after a first-time Google sign-in, for what Google cannot tell us."""
+    """"""
     full_name = StringField("Full name", filters=[_strip],
                             validators=[DataRequired(), Length(min=2, max=150)])
     matric_number = StringField("Matriculation number", filters=[_clean_matric],
@@ -87,16 +80,15 @@ class GoogleProfileForm(FlaskForm):
             raise ValidationError("This matriculation number is already registered.")
 
 
-# ---------- the assessment ----------
 def _coerce_level(value):
-    """'' or None -> None (nothing chosen yet). Anything else must be a whole number."""
+    """"""
     if value in (None, ""):
         return None
     return int(value)
 
 
 def _chosen(options, message):
-    """The student must pick one of the listed options (a hand-made request cannot invent one)."""
+    """"""
     allowed = valid_levels(options)
 
     def check(form, field):
@@ -112,7 +104,7 @@ def _dropdown(label, options, message):
 
 
 class WholeNumberField(IntegerField):
-    """A count: a whole number, zero or more. Gives one clear message instead of WTForms' default."""
+    """"""
 
     def process_formdata(self, valuelist):
         if not valuelist or valuelist[0].strip() == "":
@@ -135,17 +127,14 @@ MAX_COUNT = 1000
 
 
 class AssessmentForm(FlaskForm):
-    # 1. Class attendance
     attendance_level = _dropdown("How often have you attended class so far this semester?",
                                  ATTENDANCE_OPTIONS, "Choose the option that best describes your attendance.")
 
-    # 2. Assignment submission
     assignments_assigned = _count("How many assignments have been assigned to you so far this semester?",
                                   "Enter how many assignments were assigned (0 if none).")
     assignments_submitted = _count("Out of those, how many have you submitted?",
                                    "Enter how many you have submitted (0 if none).")
 
-    # 3. Tests and continuous assessments
     tests_done = _count("How many tests or CAs have you done so far this semester?",
                         "Enter how many tests or CAs you have done (0 if none).")
     tests_high = _count("Out of those, how many do you think you scored above 70% in?",
@@ -153,11 +142,9 @@ class AssessmentForm(FlaskForm):
     tests_low = _count("How many do you think you scored below 50% in?",
                        "Enter a number (0 if none).")
 
-    # 4. Study hours
     study_hours_level = _dropdown("How many hours do you typically study outside class in a week?",
                                   STUDY_HOURS_OPTIONS, "Choose your typical weekly study hours.")
 
-    # 5. Financial situation
     financial_comfort = _dropdown("How financially comfortable would you consider yourself as a student?",
                                   FINANCIAL_COMFORT_OPTIONS, "Choose how financially comfortable you are.")
     financial_impact = _dropdown(
@@ -165,7 +152,6 @@ class AssessmentForm(FlaskForm):
         "(e.g. buying textbooks, paying dues, transport, data for studying)",
         FINANCIAL_IMPACT_OPTIONS, "Choose how often money affects you.")
 
-    # CGPA (only asked for when the student has one)
     has_cgpa = RadioField(
         "Do you have your current CGPA?",
         choices=[("yes", "Yes, I have my current CGPA"), ("no", "No, I do not have my CGPA yet")],
@@ -192,7 +178,6 @@ class AssessmentForm(FlaskForm):
             field.errors = list(field.errors) + [message]
             return False
 
-        # CGPA: needed (0 to the scale maximum) only when the student says they have one.
         if self.has_cgpa.data == "yes":
             maximum = current_app.config["CGPA_MAX"]
             value = self.previous_cgpa.data
@@ -204,11 +189,9 @@ class AssessmentForm(FlaskForm):
             elif not (0 <= value <= maximum):
                 valid = fail(self.previous_cgpa, f"CGPA must be between 0 and {maximum:g}.")
         elif self.has_cgpa.data == "no":
-            # A hidden CGPA box is ignored: with no CGPA the value is "missing", never zero.
             self.previous_cgpa.errors = []
             self.previous_cgpa.data = None
 
-        # Counts must make sense together.
         assigned, submitted = self.assignments_assigned.data, self.assignments_submitted.data
         if assigned is not None and submitted is not None and submitted > assigned:
             valid = fail(self.assignments_submitted,
@@ -224,8 +207,6 @@ class AssessmentForm(FlaskForm):
                          f"A test cannot be both above 70% and below 50%, so these two cannot add up to more than {done}.")
         return valid
 
-
-# ---------- administrator forms ----------
 class CreateStaffForm(FlaskForm):
     full_name = StringField("Full name", filters=[_strip],
                             validators=[DataRequired(), Length(min=2, max=150)])

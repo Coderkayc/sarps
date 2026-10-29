@@ -1,4 +1,4 @@
-"""Student registration, sign in and sign out."""
+""""""
 import logging
 import secrets
 
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
-    """Only students can register themselves. Staff accounts are created by the administrator."""
+    """"""
     if current_user.is_authenticated:
         return redirect(url_for(home_endpoint(current_user)))
 
@@ -43,7 +43,6 @@ def register():
         try:
             db.session.commit()
         except IntegrityError:
-            # Usually a double click: the first request already created this account.
             db.session.rollback()
             flash("An account with this email or matriculation number already exists. "
                   "Please sign in.", "error")
@@ -81,11 +80,6 @@ def logout():
     flash("You have been signed out.", "info")
     return redirect(url_for("main.index"))
 
-
-# ---------- Sign in with Google ----------
-# Google proves who the person is (a verified email). We never see their Google password.
-# A person who already has an account is signed in to it. A new person is asked for their
-# matriculation number and department once, and gets a student account.
 def google_configured():
     return bool(current_app.config.get("GOOGLE_CLIENT_ID") and current_app.config.get("GOOGLE_CLIENT_SECRET"))
 
@@ -165,7 +159,7 @@ def google_callback():
 
 @auth_bp.route("/auth/google/profile", methods=["GET", "POST"])
 def google_profile():
-    """First-time Google sign-in: collect the matric number and department, then create the student."""
+    """"""
     if current_user.is_authenticated:
         return redirect(url_for(home_endpoint(current_user)))
     pending = session.get("google_pending")
@@ -191,7 +185,6 @@ def google_profile():
         student = User(full_name=form.full_name.data, email=pending["email"], role=Role.STUDENT,
                        department_id=form.department_id.data, matric_number=form.matric_number.data,
                        google_sub=pending["sub"])
-        # No password is ever used for this account, so it gets a long random one nobody knows.
         student.set_password(secrets.token_urlsafe(32))
         db.session.add(student)
         try:

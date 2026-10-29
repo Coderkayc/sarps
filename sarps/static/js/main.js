@@ -1,4 +1,3 @@
-// Mobile menu: show/hide the navigation when the menu button is pressed.
 (function () {
   var toggle = document.querySelector(".nav-toggle");
   var nav = document.getElementById("site-nav");
@@ -13,13 +12,10 @@
     setOpen(!nav.classList.contains("is-open"));
   });
 
-  // Close the menu after tapping a link (useful on phones).
   nav.addEventListener("click", function (event) {
     if (event.target.tagName === "A") setOpen(false);
   });
 })();
-
-// Tables on phones: label every cell with its column heading so each row can show as a small card.
 (function () {
   document.querySelectorAll("table.table").forEach(function (table) {
     var heads = Array.prototype.map.call(table.querySelectorAll("thead th"), function (th) {

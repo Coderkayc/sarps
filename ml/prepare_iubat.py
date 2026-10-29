@@ -1,31 +1,3 @@
-"""Convert the public IUBAT dataset (Mendeley Data, CC BY 4.0) into SARPS training format.
-
-Source: "Dataset on Academic Performance of Computer Science Students at Selected
-Universities in Bangladesh", file IUBAT_Student_Performance_Dataset.csv.
-
-    python -m ml.prepare_iubat --raw path/to/IUBAT_Student_Performance_Dataset.csv --out ml/data/iubat_training.csv
-
-Every choice below is a judgement call. State them in your project report.
-
-  not_at_risk                 1 if the student answered "No" to "Did you ever fall in
-                              probation?", 0 if "Yes". Probation is a real academic outcome.
-  attendance_level            "Average attendance on class (Percentage)" put into the same 7 bands
-                              as the form dropdown (0, 1-20, 21-40, 41-60, 61-80, 81-95, 96-100).
-  study_hours_level           daily study hours x 7, put into the same 10 bands as the form.
-                              Blank if daily hours are above 16 (typing errors such as 30).
-  financial_comfort           PROXY from monthly family income (BDT): the sample is split into five
-                              equal groups, lowest income = 1 (severely struggling) up to
-                              highest = 5 (very comfortable). Income of 0 = blank.
-  previous_cgpa               "current CGPA" (the student's cumulative GPA at survey time, which
-                              is what a student would enter as their CGPA). Blank if 0 (first-semester
-                              students have none) or above the dataset's 4.0 scale (typing errors such
-                              as 310). Multiplied by (cgpa_max / 4.0) to move it to your scale.
-  assignment_submission_rate,
-  ca_high_rate, ca_low_rate,
-  financial_impact            NOT IN THIS DATASET. Left blank. Train with
-                              --unused assignment_submission_rate ca_high_rate ca_low_rate financial_impact
-                              so the model ignores them.
-"""
 import argparse
 import sys
 

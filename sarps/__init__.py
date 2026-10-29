@@ -1,7 +1,5 @@
-"""The SARPS application package.
-
-create_app() builds a fresh Flask app. Using a function (the "application
-factory" pattern) lets the tests build their own app with a throw-away database.
+"""
+The SARPS application package.
 """
 from datetime import datetime, timezone
 
@@ -37,7 +35,7 @@ def create_app(config_class=Config):
         )
     PredictionService().init_app(app)
 
-    from sarps import models  # noqa: F401  (makes sure the tables are registered)
+    from sarps import models  
     from sarps.routes.admin import admin_bp
     from sarps.routes.auth import auth_bp
     from sarps.routes.main import main_bp
@@ -95,12 +93,12 @@ def register_template_helpers(app):
 
     @app.template_global("answer")
     def answer(kind, level):
-        """The dropdown wording a student chose, e.g. answer('attendance', 4)."""
+        """Return the label for a given option."""
         return option_label(option_sets[kind], level) if level is not None else None
 
     @app.template_filter("risk_display")
     def risk_display(label):
-        """The two result labels exactly as specified."""
+        """"""
         return "AT RISK \u26a0" if label == "At Risk" else "NOT AT RISK \u2713"
 
     @app.template_filter("dt")
@@ -118,10 +116,8 @@ def register_security_headers(app):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "same-origin"
-        # Only this site's own scripts and styles may run.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self'")
-        # Pages with personal data must not be kept in the browser's cache.
         if request.endpoint != "static":
             response.headers["Cache-Control"] = "no-store"
         return response

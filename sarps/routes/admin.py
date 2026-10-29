@@ -1,6 +1,4 @@
-"""Administrator pages: accounts, departments and adviser/lecturer assignments.
-
-The administrator manages accounts but has no page that shows assessments.
+"""
 """
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user

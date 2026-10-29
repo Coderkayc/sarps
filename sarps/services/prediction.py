@@ -1,7 +1,4 @@
-"""Loads the REAL trained model and turns student inputs into a probability.
-
-If no trained model file exists, this service says so and refuses to predict.
-It never invents a number.
+"""
 """
 import logging
 import threading
@@ -18,16 +15,15 @@ log = logging.getLogger(__name__)
 
 
 class PredictionError(Exception):
-    """Prediction could not be made."""
-
+    """"""
 
 class ModelNotAvailable(PredictionError):
-    """There is no usable trained model."""
+    """"""
 
 
 @dataclass
 class Prediction:
-    prob_not_at_risk: float  # percent, 0-100, two decimals
+    prob_not_at_risk: float  
     model_version: str
 
 
@@ -41,14 +37,12 @@ class PredictionService:
 
     def init_app(self, app):
         path = Path(app.config["MODEL_PATH"])
-        if not path.is_absolute():  # a relative path in .env means "inside the project folder"
+        if not path.is_absolute():
             path = Path(app.root_path).parent / path
         self._path = path
         self._cgpa_max = app.config.get("CGPA_MAX")
         app.extensions["prediction"] = self
 
-    # The file is re-checked on each use, so a newly trained model is picked up
-    # without restarting the app. Re-loading only happens if the file changed.
     def _refresh(self):
         with self._lock:
             try:
@@ -64,7 +58,7 @@ class PredictionService:
                 bundle = joblib.load(self._path)
                 self._validate(bundle)
                 self._bundle, self._error = bundle, None
-            except Exception as exc:  # a broken file must never crash the website
+            except Exception as exc:  
                 log.exception("Could not load the model file")
                 self._bundle, self._error = None, str(exc)
 
@@ -94,7 +88,6 @@ class PredictionService:
             "trained_at": self._bundle.get("trained_at"),
             "n_rows": self._bundle.get("n_rows"),
             "unused_features": list(self._bundle.get("unused_features", [])),
-            # True when the model was trained on made-up data. The site then says so on every page.
             "synthetic": bool(self._bundle.get("synthetic", False)),
             "metrics": self._bundle.get("metrics"),
         }
@@ -103,11 +96,7 @@ class PredictionService:
         return self.status()["available"]
 
     def explain(self, features):
-        """Which inputs pushed this student's score up or down, versus the average training student.
-
-        Only works for the logistic model (every input has one fixed weight). Returns a list of
-        dicts sorted by strength, or an empty list if the model type cannot be explained this way.
-        Each contribution is in "log-odds": positive raises the Not at Risk score, negative lowers it.
+        """
         """
         self._refresh()
         if self._bundle is None:
@@ -128,7 +117,7 @@ class PredictionService:
         result = []
         for index, name in enumerate(kept):
             if np.isnan(frame.iloc[0][name]):
-                continue  # the student left this blank; it says nothing about them
+                continue  
             result.append({
                 "name": name,
                 "value": float(frame.iloc[0][name]),
@@ -139,11 +128,10 @@ class PredictionService:
         return result
 
     def predict(self, features):
-        """`features` is a dict from ml.features.features_from_inputs."""
+        """"""
         self._refresh()
         if self._bundle is None:
             raise ModelNotAvailable("No trained model is available.")
-        # Inputs the model was trained without are blanked, exactly as in training.
         features = dict(features)
         for name in self._bundle.get("unused_features", []):
             features[name] = np.nan

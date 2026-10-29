@@ -9,11 +9,7 @@ from sarps.constants import STAFF_ROLES, Role
 
 
 def password_problems(password, minimum):
-    """List what is wrong with a new password (empty list = acceptable).
-
-    Same four rules the sign-up form shows live: length, an uppercase letter,
-    a number and a special character. The browser hint (password.js) is only
-    a convenience; this server-side check is the one that counts.
+    """
     """
     password = password or ""
     problems = []
@@ -29,7 +25,7 @@ def password_problems(password, minimum):
 
 
 def role_required(*roles):
-    """Allow only signed-in users with one of `roles`. Others get 403 (or the login page)."""
+    """"""
     def decorator(view):
         @wraps(view)
         @login_required
@@ -42,7 +38,7 @@ def role_required(*roles):
 
 
 def home_endpoint(user):
-    """The dashboard each role lands on after signing in."""
+    """"""
     if user.role == Role.STUDENT:
         return "student.dashboard"
     if user.role in STAFF_ROLES:
@@ -51,7 +47,7 @@ def home_endpoint(user):
 
 
 def is_safe_next_url(target):
-    """Only allow redirects to pages on this same site (blocks open-redirect tricks)."""
+    """"""
     if not target or "\\" in target:
         return False
     parts = urlparse(target)

@@ -1,12 +1,5 @@
-"""Bring an EXISTING database up to date with the models, without losing data.
-
-`db.create_all()` only creates tables that are missing; it never changes a table that
-already exists. When we add a column, an old database needs it added too. This does that:
-
-  * adds any column the models have that the table lacks (as NULL-able), and
-  * on MySQL/MariaDB, makes a column NULL-able if the models now say it may be empty.
-
-It never drops or renames anything, and running it twice changes nothing the second time.
+"""
+Upgrade the database schema to match the models.
 """
 from sqlalchemy import inspect, text
 
